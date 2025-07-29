@@ -2,6 +2,7 @@ mod bugs;
 mod environments;
 mod troopers;
 mod tui;
+mod utils;
 
 use bugs::Broodmother;
 

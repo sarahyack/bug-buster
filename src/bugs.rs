@@ -1,8 +1,10 @@
 #![allow(dead_code)]
 // Imports
 
-use rand::{prelude::IndexedRandom, seq::SliceRandom, Rng};
+use rand::{prelude::IndexedRandom, seq::SliceRandom};
 use std::default::Default;
+
+use crate::utils::{SafeSub, rand_bool};
 
 // Enums, Traits, & Constants
 
@@ -56,13 +58,6 @@ impl BugStats {
             agility
         }
     } 
-}
-
-// Helper Functions
-
-fn rand_bool(probability: f32) -> bool {
-    let mut rng = rand::rng();
-    rng.random::<f32>() < probability
 }
 
 // Builder Functions
@@ -350,7 +345,7 @@ fn apply_modifiers(stats: &mut BugStats, traits: &BugTraits, debuffs: &BugDebuff
         };
         ($cond:expr, $field:ident -= $val:expr) => {
             if $cond {
-                stats.$field = stats.$field - $val;
+                stats.$field = stats.$field.safe_sub($val);
             }
         };
         ($cond:expr, $field:ident = $expr:expr) => {
