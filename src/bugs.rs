@@ -361,16 +361,26 @@ fn apply_modifiers(stats: &mut BugStats, traits: &BugTraits, debuffs: &BugDebuff
     }
 
     boost!(traits.armored, ap += 20);
-    boost!(traits.regenerative, hp += 10);
-    boost!(traits.explosive, damage += 50);
-    boost!(traits.camouflaged, agility = 1.0);
     boost!(traits.adaptive, agility += 0.1);
+    boost!(traits.explosive, damage += 50);
+    boost!(traits.explosive, hp -= 10);
+    boost!(traits.explosive, ap -= 5);
+    boost!(traits.camouflaged, agility = 1.0);
+    boost!(traits.camouflaged, hp -= 10);
+    boost!(traits.camouflaged, ap -= 10);
     boost!(traits.hivelink, hp += 10);
-    boost!(traits.hivelink, ap += 10);
+    boost!(traits.psychic, damage += 10);
+    boost!(traits.regenerative, hp += 10);
 
+    boost!(debuffs.acid_leak, hp -= 10);
     boost!(debuffs.cracked_shell, ap -= 10);
     boost!(debuffs.sluggish, agility -= 0.3);
+    boost!(debuffs.sickness, hp -= 20);
+    boost!(debuffs.sickness, ap -= 5);
+    boost!(debuffs.sickness, damage -= 10);
     boost!(debuffs.poor_eyesight, accuracy -= 0.3);
+    boost!(debuffs.poor_eyesight, damage -= 5);
+    boost!(debuffs.outcast, ap -= 10);
 
     stats.hp = stats.hp.clamp(10, 300);
     stats.ap = stats.ap.clamp(0, 100);
