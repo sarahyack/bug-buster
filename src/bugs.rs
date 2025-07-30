@@ -7,6 +7,10 @@ use std::default::Default;
 use crate::utils::{SafeSub, rand_bool};
 
 // Enums, Traits, & Constants
+// TODO: Replace every instance of Debuff/debuff with Flaw. Need to reserve debuff/buff to attack
+// effects, since I can't easily think of another name for them.
+// TODO: Add Effect/Debuff/Buff system as according to the various kinds of attack effects outlined
+// in weapons & gear.
 
 #[derive(Debug, Copy, Clone)]
 enum BugClass { Charger, Spitter, Swarmer, Hivemind, Pincer, Burrower, Exploder, Jumper, Tank }
@@ -28,7 +32,7 @@ struct BugTraits {
 }
 
 #[derive(Default, Debug, Copy, Clone)]
-struct BugDebuffs {
+struct BugFlaws {
     acid_leak: bool,
     cracked_shell: bool,
     sickness: bool,
@@ -221,99 +225,99 @@ fn determine_traits(species: BugSpecies) -> BugTraits {
     traits
 }
 
-fn get_species_debuff_pool(species: BugSpecies, debuffs: &mut BugDebuffs) -> Vec<&mut bool> {
+fn get_species_flaw_pool(species: BugSpecies, flaws: &mut BugFlaws) -> Vec<&mut bool> {
     use BugSpecies::*;
     match species {
         Snapper => vec![
-            &mut debuffs.acid_leak,
-            &mut debuffs.sensory_lag,
-            &mut debuffs.outcast,
-            &mut debuffs.sluggish,
+            &mut flaws.acid_leak,
+            &mut flaws.sensory_lag,
+            &mut flaws.outcast,
+            &mut flaws.sluggish,
         ],
         Maw => vec![
-            &mut debuffs.cracked_shell,
-            &mut debuffs.neural_misfire,
-            &mut debuffs.sickness,
-            &mut debuffs.poor_eyesight,
+            &mut flaws.cracked_shell,
+            &mut flaws.neural_misfire,
+            &mut flaws.sickness,
+            &mut flaws.poor_eyesight,
         ],
         Noodle => vec![
-            &mut debuffs.poor_eyesight,
-            &mut debuffs.cracked_shell,
-            &mut debuffs.acid_leak,
-            &mut debuffs.sensory_lag,
-            &mut debuffs.neural_misfire,
+            &mut flaws.poor_eyesight,
+            &mut flaws.cracked_shell,
+            &mut flaws.acid_leak,
+            &mut flaws.sensory_lag,
+            &mut flaws.neural_misfire,
         ],
         Priest => vec![
-            &mut debuffs.outcast,
-            &mut debuffs.sluggish,
-            &mut debuffs.neural_misfire,
+            &mut flaws.outcast,
+            &mut flaws.sluggish,
+            &mut flaws.neural_misfire,
         ],
         Skitter => vec![
-            &mut debuffs.cracked_shell,
-            &mut debuffs.acid_leak,
-            &mut debuffs.sensory_lag,
-            &mut debuffs.sluggish,
+            &mut flaws.cracked_shell,
+            &mut flaws.acid_leak,
+            &mut flaws.sensory_lag,
+            &mut flaws.sluggish,
         ],
         Leaper => vec![
-            &mut debuffs.sluggish,
-            &mut debuffs.poor_eyesight,
-            &mut debuffs.neural_misfire,
-            &mut debuffs.sickness,
+            &mut flaws.sluggish,
+            &mut flaws.poor_eyesight,
+            &mut flaws.neural_misfire,
+            &mut flaws.sickness,
         ],
         Sporebelly => vec![
-            &mut debuffs.acid_leak,
-            &mut debuffs.cracked_shell,
-            &mut debuffs.sluggish,
-            &mut debuffs.neural_misfire,
+            &mut flaws.acid_leak,
+            &mut flaws.cracked_shell,
+            &mut flaws.sluggish,
+            &mut flaws.neural_misfire,
         ],
         Fleshcrawler => vec![
-            &mut debuffs.poor_eyesight,
-            &mut debuffs.outcast,
-            &mut debuffs.sickness,
-            &mut debuffs.cracked_shell,
-            &mut debuffs.acid_leak,
+            &mut flaws.poor_eyesight,
+            &mut flaws.outcast,
+            &mut flaws.sickness,
+            &mut flaws.cracked_shell,
+            &mut flaws.acid_leak,
         ],
         Blinker => vec![
-            &mut debuffs.poor_eyesight,
-            &mut debuffs.acid_leak,
-            &mut debuffs.outcast,
-            &mut debuffs.sickness,
-            &mut debuffs.neural_misfire,
+            &mut flaws.poor_eyesight,
+            &mut flaws.acid_leak,
+            &mut flaws.outcast,
+            &mut flaws.sickness,
+            &mut flaws.neural_misfire,
         ],
         Skulker => vec![
-            &mut debuffs.acid_leak,
-            &mut debuffs.sensory_lag,
-            &mut debuffs.cracked_shell,
+            &mut flaws.acid_leak,
+            &mut flaws.sensory_lag,
+            &mut flaws.cracked_shell,
         ],
         Tornaut => vec![
-            &mut debuffs.poor_eyesight,
-            &mut debuffs.neural_misfire,
-            &mut debuffs.sluggish,
-            &mut debuffs.cracked_shell,
+            &mut flaws.poor_eyesight,
+            &mut flaws.neural_misfire,
+            &mut flaws.sluggish,
+            &mut flaws.cracked_shell,
         ],
         Queen => vec![
-            &mut debuffs.sensory_lag,
-            &mut debuffs.poor_eyesight,
+            &mut flaws.sensory_lag,
+            &mut flaws.poor_eyesight,
         ],
     }
 }
 
-fn determine_debuffs(species: BugSpecies) -> BugDebuffs {
-    let mut debuffs = BugDebuffs { ..Default::default() };
+fn determine_flaws(species: BugSpecies) -> BugFlaws {
+    let mut flaws = BugFlaws { ..Default::default() };
     let mut rng = rand::rng();
 
     if rand_bool(0.4) {
-        let mut debuff_pool = get_species_debuff_pool(species, &mut debuffs);
-        debuff_pool.shuffle(&mut rng);
-        for (i, debuff_ref) in debuff_pool.into_iter().enumerate() {
+        let mut flaw_pool = get_species_flaw_pool(species, &mut flaws);
+        flaw_pool.shuffle(&mut rng);
+        for (i, flaw_ref) in flaw_pool.into_iter().enumerate() {
             if i >= 3 { break; }
             if rand_bool(0.5) {
-                *debuff_ref = true;
+                *flaw_ref = true;
             }
         }
     }
 
-    debuffs
+    flaws
 }
 
 fn get_base_stats(species: BugSpecies) -> BugStats {
@@ -336,7 +340,7 @@ fn get_base_stats(species: BugSpecies) -> BugStats {
     BugStats::new(hp, ap, damage, accuracy, agility)
 }
 
-fn apply_modifiers(stats: &mut BugStats, traits: &BugTraits, debuffs: &BugDebuffs) -> BugStats {
+fn apply_modifiers(stats: &mut BugStats, traits: &BugTraits, flaws: &BugFlaws) -> BugStats {
     macro_rules! boost {
         ($cond:expr, $field:ident += $val:expr) => {
             if $cond {
@@ -367,15 +371,15 @@ fn apply_modifiers(stats: &mut BugStats, traits: &BugTraits, debuffs: &BugDebuff
     boost!(traits.psychic, damage += 10);
     boost!(traits.regenerative, hp += 10);
 
-    boost!(debuffs.acid_leak, hp -= 10);
-    boost!(debuffs.cracked_shell, ap -= 10);
-    boost!(debuffs.sluggish, agility -= 0.3);
-    boost!(debuffs.sickness, hp -= 20);
-    boost!(debuffs.sickness, ap -= 5);
-    boost!(debuffs.sickness, damage -= 10);
-    boost!(debuffs.poor_eyesight, accuracy -= 0.3);
-    boost!(debuffs.poor_eyesight, damage -= 5);
-    boost!(debuffs.outcast, ap -= 10);
+    boost!(flaws.acid_leak, hp -= 10);
+    boost!(flaws.cracked_shell, ap -= 10);
+    boost!(flaws.sluggish, agility -= 0.3);
+    boost!(flaws.sickness, hp -= 20);
+    boost!(flaws.sickness, ap -= 5);
+    boost!(flaws.sickness, damage -= 10);
+    boost!(flaws.poor_eyesight, accuracy -= 0.3);
+    boost!(flaws.poor_eyesight, damage -= 5);
+    boost!(flaws.outcast, ap -= 10);
 
     stats.hp = stats.hp.clamp(10, 300);
     stats.ap = stats.ap.clamp(0, 100);
@@ -389,9 +393,9 @@ fn apply_modifiers(stats: &mut BugStats, traits: &BugTraits, debuffs: &BugDebuff
     *stats
 }
 
-fn get_stats(species: BugSpecies, traits: &BugTraits, debuffs: &BugDebuffs) -> BugStats {
+fn get_stats(species: BugSpecies, traits: &BugTraits, flaws: &BugFlaws) -> BugStats {
     let mut base = get_base_stats(species);
-    apply_modifiers(&mut base, traits, debuffs)
+    apply_modifiers(&mut base, traits, flaws)
 }
 
 // Bug Struct
@@ -403,7 +407,7 @@ pub struct Bug {
     class: BugClass,
     tactic: BugTactic,
     traits: BugTraits,
-    debuffs: BugDebuffs,
+    flaws: BugFlaws,
     stats: BugStats,
 }
 
@@ -413,8 +417,8 @@ impl Bug {
 
         let tactic = determine_tactic(species);
         let traits = determine_traits(species);
-        let debuffs = determine_debuffs(species);
-        let stats = get_stats(species, &traits, &debuffs);
+        let flaws = determine_flaws(species);
+        let stats = get_stats(species, &traits, &flaws);
 
         Bug {
             species,
@@ -423,7 +427,7 @@ impl Bug {
             class,
             tactic,
             traits,
-            debuffs,
+            flaws,
             stats,
         }
     }
@@ -463,7 +467,7 @@ impl Broodmother {
             println!("Tactic: {:?}", bug.tactic);
             println!("Stats: {:?}", bug.stats);
             println!("Traits: {:?}", bug.traits);
-            println!("Debuffs: {:?}", bug.debuffs);
+            println!("Flaws: {:?}", bug.flaws);
             println!();
         }
     }
