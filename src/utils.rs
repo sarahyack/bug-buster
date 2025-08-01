@@ -1,5 +1,4 @@
 use rand::{seq::SliceRandom, Rng};
-use SafeSub::safe_sub;
 
 // Macros
 
