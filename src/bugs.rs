@@ -1,16 +1,17 @@
 #![allow(dead_code)]
 // Imports
 
-use rand::{prelude::IndexedRandom, seq::SliceRandom};
+use rand::{prelude::IndexedRandom};
 use std::default::Default;
 
-use crate::utils::{SafeSub, rand_bool};
+use crate::boost;
+use crate::utils::{SafeSub, RandBools as Bools};
+use crate::armory::Effect;
 
 // Enums, Traits, & Constants
-// TODO: Replace every instance of Debuff/debuff with Flaw. Need to reserve debuff/buff to attack
-// effects, since I can't easily think of another name for them.
 // TODO: Add Effect/Debuff/Buff system as according to the various kinds of attack effects outlined
-// in weapons & gear.
+// in armory. (Probably handled by Broodmother once Broodmother's been fleshed out and isn't in
+// debug(hah) mode anymore.)
 
 #[derive(Debug, Copy, Clone)]
 enum BugClass { Charger, Spitter, Swarmer, Hivemind, Pincer, Burrower, Exploder, Jumper, Tank }
@@ -211,16 +212,8 @@ fn determine_traits(species: BugSpecies) -> BugTraits {
     get_species_trait(species, &mut traits);
 
     let mut trait_pool = get_species_trait_pool(species, &mut traits);
-    let mut assigned = 0;
 
-    trait_pool.shuffle(&mut rng);
-    for (_, trait_ref) in trait_pool.into_iter().enumerate() {
-        if assigned >= 2 { break; }
-        if rand_bool(0.5) || assigned == 0 {
-            *trait_ref = true;
-            assigned += 1;
-        }
-    }
+    Bools::roll_bools(&mut trait_pool, &mut rng, 2, 0.5, true);
 
     traits
 }
@@ -305,17 +298,9 @@ fn get_species_flaw_pool(species: BugSpecies, flaws: &mut BugFlaws) -> Vec<&mut 
 fn determine_flaws(species: BugSpecies) -> BugFlaws {
     let mut flaws = BugFlaws { ..Default::default() };
     let mut rng = rand::rng();
+    let mut flaw_pool = get_species_flaw_pool(species, &mut flaws);
 
-    if rand_bool(0.4) {
-        let mut flaw_pool = get_species_flaw_pool(species, &mut flaws);
-        flaw_pool.shuffle(&mut rng);
-        for (i, flaw_ref) in flaw_pool.into_iter().enumerate() {
-            if i >= 3 { break; }
-            if rand_bool(0.5) {
-                *flaw_ref = true;
-            }
-        }
-    }
+    Bools::maybe_roll_bools(&mut flaw_pool, &mut rng, 3, 0.5, false, 0.4);
 
     flaws
 }
@@ -341,45 +326,28 @@ fn get_base_stats(species: BugSpecies) -> BugStats {
 }
 
 fn apply_modifiers(stats: &mut BugStats, traits: &BugTraits, flaws: &BugFlaws) -> BugStats {
-    macro_rules! boost {
-        ($cond:expr, $field:ident += $val:expr) => {
-            if $cond {
-                stats.$field += $val;
-            }
-        };
-        ($cond:expr, $field:ident -= $val:expr) => {
-            if $cond {
-                stats.$field = stats.$field.safe_sub($val);
-            }
-        };
-        ($cond:expr, $field:ident = $expr:expr) => {
-            if $cond {
-                stats.$field = $expr;
-            }
-        };
-    }
 
-    boost!(traits.armored, ap += 20);
-    boost!(traits.adaptive, agility += 0.1);
-    boost!(traits.explosive, damage += 50);
-    boost!(traits.explosive, hp -= 10);
-    boost!(traits.explosive, ap -= 5);
-    boost!(traits.camouflaged, agility = 1.0);
-    boost!(traits.camouflaged, hp -= 10);
-    boost!(traits.camouflaged, ap -= 10);
-    boost!(traits.hivelink, hp += 10);
-    boost!(traits.psychic, damage += 10);
-    boost!(traits.regenerative, hp += 10);
+    boost!(stats, traits.armored, ap += 20);
+    boost!(stats, traits.adaptive, agility += 0.1);
+    boost!(stats, traits.explosive, damage += 50);
+    boost!(stats, traits.explosive, hp -= 10);
+    boost!(stats, traits.explosive, ap -= 5);
+    boost!(stats, traits.camouflaged, agility = 1.0);
+    boost!(stats, traits.camouflaged, hp -= 10);
+    boost!(stats, traits.camouflaged, ap -= 10);
+    boost!(stats, traits.hivelink, hp += 10);
+    boost!(stats, traits.psychic, damage += 10);
+    boost!(stats, traits.regenerative, hp += 10);
 
-    boost!(flaws.acid_leak, hp -= 10);
-    boost!(flaws.cracked_shell, ap -= 10);
-    boost!(flaws.sluggish, agility -= 0.3);
-    boost!(flaws.sickness, hp -= 20);
-    boost!(flaws.sickness, ap -= 5);
-    boost!(flaws.sickness, damage -= 10);
-    boost!(flaws.poor_eyesight, accuracy -= 0.3);
-    boost!(flaws.poor_eyesight, damage -= 5);
-    boost!(flaws.outcast, ap -= 10);
+    boost!(stats, flaws.acid_leak, hp -= 10);
+    boost!(stats, flaws.cracked_shell, ap -= 10);
+    boost!(stats, flaws.sluggish, agility -= 0.3);
+    boost!(stats, flaws.sickness, hp -= 20);
+    boost!(stats, flaws.sickness, ap -= 5);
+    boost!(stats, flaws.sickness, damage -= 10);
+    boost!(stats, flaws.poor_eyesight, accuracy -= 0.3);
+    boost!(stats, flaws.poor_eyesight, damage -= 5);
+    boost!(stats, flaws.outcast, ap -= 10);
 
     stats.hp = stats.hp.clamp(10, 300);
     stats.ap = stats.ap.clamp(0, 100);

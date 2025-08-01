@@ -1,10 +1,61 @@
-use rand::Rng;
+use rand::{seq::SliceRandom, Rng};
+use SafeSub::safe_sub;
+
+// Macros
+
+#[macro_export]
+macro_rules! boost {
+    ($stats:expr, $cond:expr, $field:ident += $val:expr) => {
+        if $cond {
+            $stats.$field += $val;
+        }
+    };
+    ($stats:expr, $cond:expr, $field:ident -= $val:expr) => {
+        if $cond {
+            $stats.$field = $stats.$field.safe_sub($val);
+        }
+    };
+    ($stats:expr, $cond:expr, $field:ident = $expr:expr) => {
+        if $cond {
+            $stats.$field = $expr;
+        }
+    };
+}
 
 // Random Generation Tools
 
-pub fn rand_bool(probability: f32) -> bool {
-    let mut rng = rand::rng();
-    rng.random::<f32>() < probability
+pub struct RandBools {}
+
+impl RandBools {
+    pub fn rand_bool(probability: f32) -> bool {
+        let mut rng = rand::rng();
+        rng.random::<f32>() < probability
+    }
+
+    pub fn roll_bools<R: Rng>(pool: &mut Vec<&mut bool>, rng: &mut R, max_assign: usize, prob: f32, guaranteed_one: bool) {
+        pool.shuffle(rng);
+        let mut assigned = 0;
+        for (_, item) in pool.into_iter().enumerate() {
+            if assigned >= max_assign { break; }
+            if Self::rand_bool(prob) || (guaranteed_one && assigned == 0) {
+                **item = true;
+                assigned += 1;
+            }
+        }
+    }
+
+    pub fn maybe_roll_bools<R: Rng>(
+        pool: &mut Vec<&mut bool>,
+        rng: &mut R,
+        max_assign: usize,
+        prob: f32,
+        guaranteed_one: bool,
+        initial_chance: f32,
+    ) {
+        if Self::rand_bool(initial_chance) {
+            Self::roll_bools(pool, rng, max_assign, prob, guaranteed_one);
+        }
+    }
 }
 
 
