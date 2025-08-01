@@ -386,7 +386,7 @@ impl Bug {
         let tactic = determine_tactic(species);
         let traits = determine_traits(species);
         let flaws = determine_flaws(species);
-        let stats = get_stats(species, &traits, &flaws);
+        let mut stats = get_stats(species, &traits, &flaws);
 
         Bug {
             species,
