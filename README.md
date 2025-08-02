@@ -3,11 +3,12 @@
 
 *Welcome to Bug Buster! A classic rougelike turn-based game for the terminal!*
 
-==NOTICE: This game is still in early development stages and is not "playable" in any traditional sense. Or any sense at all, really.==
+> [!NOTE]
+> **NOTICE:** This game is still in early development stages and is not "playable" in any traditional sense. Or any sense at all, really.
 
 # How to Play
 
-==(Insert Screenshot)==
+> **(Insert Screenshot)**
 
 Each Run begins completely anew, as this is a classic roguelike, and not a rougelite. There is **no XP** to be gained, **no upgrades**, and more uniquely **no loot**. At the start of the run, you choose your team, composed of 3 or less troopers (you choose squad size). Each Trooper can be one of seven classes, and has their own various options for their weapons and gear. Pick their weapons, pick their gear, and spawn into the depths of the Hive, on your quest to reach the Egg Chamber and extract with the precious **_Special Item_** (name undecided). The point of the game (besides to win) is to replay the scenario and gradually learn more about the specific details of enemies, and the random modifiers applied to them as well as the ones randomly applied to your troopers. Each run (path, environment, enemy waves, etc) is procedurally generated, and while the pool for possibilities isn't enourmous, it's still enough to make for some challenge. Through scanning and experience (experience fighting/managing, not XP), you'll gradually learn more and more until you get to the point where when you see and enemy or their attributes, you know how to counter them, and you know how to set up your team in order to properly and efficiently conquer the Hive.
 
@@ -15,7 +16,7 @@ Throughout the run, there will be **no loot** with the sole exception of random 
 
 ## The Prep Phase
 
-==(Insert Screenshot)==
+> **(Insert Screenshot)**
 
 At the beginning of each run, you'll be greeted with the preparation screen. This is where you choose your troopers based on their class, picking between seven, with the option to have more than one of a particular class. After choosing the troopers and locking in your decision, you'll be taken to the loadout screen, where you'll choose your weapons and your gear. Each trooper class has it's own selection of equipment to choose from, and they all have their own stats, effect, and flaw, which should be taken into account when choosing. The amount of weapons and gear you can bring depends on the trooper's class, which dictactes the amount of respective slots they have available to fill. Some options come with tradeoffs, for example sometimes in order to carry X amount of Gear, even though the trooper's Class allows carrying that amount of gear, you have to give up one of your weapons slots or not carry any of either Primary, Secondary, or Melee Weapons.
 
@@ -42,11 +43,11 @@ And no, I'm not going to tell you what they all are.
 
 ### Buffs
 
-==(To be determined)==
+**(To be determined)**
 
 ### Debuffs
 
-==(To be determined)==
+**(To be determined)**
 
 ## Recommendations
 
