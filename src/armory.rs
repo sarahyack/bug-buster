@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 // Imports
 use crate::troopers::TrooperClass;
+use rand::prelude::IndexedRandom;
 
 // TODO: Remove Effect Matchup in GearStats (AFTER ARMORY) (See related notes down by GearStats)
 // TODO: Create Armory Struct (Handles all weapon/gear creation & logic, but prob for now creates a
@@ -19,8 +20,8 @@ use crate::troopers::TrooperClass;
 
 #[derive(Default, Debug, Copy, Clone)]
 pub enum Distance { Far, #[default] Normal, Near, Close }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Usage { Limited(u32), Unlimited }
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+enum Usage { Limited(u32), #[default] Unlimited }
 enum EquipmentType { Weapon, Gear }
 enum EquipmentID {
     WeaponID(WeaponID),
@@ -445,8 +446,8 @@ static WEAPON_INFO: &[WeaponInfo] = &[
     },
 ];
 
-fn get_weapon_info(id: WeaponID) -> Option<&'static WeaponInfo> {
-    WEAPON_INFO.iter().find(|w|  w.id == id)
+fn get_weapon_info(id: WeaponID) -> WeaponInfo {
+    WEAPON_INFO.iter().find(|w|  w.id == id).expect(&format!("Invalid Weapon ID: {:?}", id)).clone()
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -500,7 +501,7 @@ static WEAPON_RESTRICTIONS: &[WeaponRestrictions] = &[
     WeaponRestrictions { id: WeaponID::TacticalBaton, classes: None },
 ];
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 struct WeaponStats {
     id: WeaponID,
     range: Distance,
@@ -928,15 +929,15 @@ static WEAPON_STATS: &[WeaponStats] = &[
     },
 ];
 
-fn get_weapon_stats(id: WeaponID) -> Option<&'static WeaponStats> {
-    WEAPON_STATS.iter().find(|w|  w.id == id)
+fn get_weapon_stats(id: WeaponID) -> WeaponStats {
+    WEAPON_STATS.iter().find(|w|  w.id == id).expect(&format!("Invalid Weapon ID: {:?}", id)).clone()
 }
 
 #[derive(Default, Clone, Debug)]
 pub struct Weapon {
     id: WeaponID,
-    info: Option<&'static WeaponInfo>,
-    stats: Option<&'static WeaponStats>,
+    info: WeaponInfo,
+    stats: WeaponStats,
     effect: Option<Effect>,
     flaw: Option<EquipmentFlaw>,
 }
@@ -964,46 +965,7 @@ impl Weapon {
 // be used as a external sort of api function, idk.
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-enum GearID {
-    #[default] ReinforcedPlating,
-    AmmoFeederRig,
-    BlastShield,
-    ShockwaveGrenade,
-    CloakFieldUnit,
-    GrappleLauncher,
-    EchoBeacon,
-    HoloDecoy,
-    NanoMistInjector,
-    StabilizerDrone,
-    AntitoxinSpray,
-    Painkillers,
-    AutoTurret,
-    PatchKit,
-    SensorNode,
-    LaserTripwire,
-    PortableMinefield,
-    ArcWelder,
-    DetonationRemote,
-    NanoGlueBomb,
-    PlasmaCutter,
-    HiveScanner,
-    ChitinBait,
-    ConfusionCollar,
-    BugPheromoneBomb,
-    ShellPack,
-    PlasmaShield,
-    UltraShredRounds,
-    GravityField,
-    EchoPulse,
-    HoloDoubler,
-    DoppelgangerSuit,
-    NanoPatch,
-    StimPack,
-    FragGrenade,
-    SmokeBomb,
-    AdrenalineInjector,
-    TrapKit,
-}
+enum GearID { #[default] ReinforcedPlating, AmmoFeederRig, BlastShield, ShockwaveGrenade, CloakFieldUnit, GrappleLauncher, EchoBeacon, HoloDecoy, NanoMistInjector, StabilizerDrone, AntitoxinSpray, Painkillers, AutoTurret, PatchKit, SensorNode, LaserTripwire, PortableMinefield, ArcWelder, DetonationRemote, NanoGlueBomb, PlasmaCutter, HiveScanner, ChitinBait, ConfusionCollar, BugPheromoneBomb, ShellPack, PlasmaShield, UltraShredRounds, GravityField, EchoPulse, HoloDoubler, DoppelgangerSuit, NanoPatch, StimPack, FragGrenade, SmokeBomb, AdrenalineInjector, TrapKit, }
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum GearType {
@@ -1294,8 +1256,8 @@ static GEAR_INFO: &[GearInfo] = &[
     },
 ];
 
-fn get_gear_info(id: GearID) -> Option<&'static GearInfo> {
-    GEAR_INFO.iter().find(|g| g.id == id)
+fn get_gear_info(id: GearID) -> GearInfo {
+    GEAR_INFO.iter().find(|g| g.id == id).expect(&format!("Invalid Gear ID: {:?}", id)).clone()
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -1692,15 +1654,15 @@ static GEAR_STATS: &[GearStats] = &[
     },
 ];
 
-fn get_gear_stats(id: GearID) -> Option<&'static GearStats> {
-    GEAR_STATS.iter().find(|g| g.id == id)
+fn get_gear_stats(id: GearID) -> GearStats {
+    GEAR_STATS.iter().find(|g| g.id == id).expect(&format!("Invalid Gear ID: {:?}", id)).clone()
 }
 
 #[derive(Default, Clone, Debug)]
-struct Gear {
+pub struct Gear {
     id: GearID,
-    info: Option<&'static GearInfo>,
-    stats: Option<&'static GearStats>,
+    info: GearInfo,
+    stats: GearStats,
     effect: Option<Effect>,
     flaw: Option<EquipmentFlaw>,
 }
@@ -1716,6 +1678,65 @@ impl Gear {
             stats,
             effect: None,
             flaw: None,
+        }
+    }
+}
+
+pub struct Armory;
+
+impl Armory {
+    pub fn create_weapons(count: usize) -> Vec<Weapon> {
+        use WeaponID::*;
+        let weapon_pool = vec![Minigun, Chaingun, ScopedRifle, PulseSMG, MagShellCannon, VenomSpiker, Flamethrower, SlugCannon, MarksmanCarbine, Railgun, Crossbolt, Spikeshot, AntigenBeam, IonScattergun, AssaultRifle, SMG, RepeaterBow, AutoPistol, SawedOffShotgun, PulsePistol, Spikeling, MicroGrenadeLauncher, HandCannon, Syringer, PlasmaDerringer, BackupRevolver, LightSMG, CombatKnife, PowerMace, ShockBlade, Cleaver, InjectorGauntlet, DoomWrench, AspLash, ArcGauntlet, MonofilamentBlade, TacticalBaton];
+        let mut rng = rand::rng();
+
+        (0..count)
+            .map(|_| {
+                let weapon = *weapon_pool.choose(&mut rng).unwrap();
+                Weapon::new(weapon)
+            })
+            .collect()
+    }
+
+    pub fn print_weapons(weapons: Vec<Weapon>) {
+        for (i, weapon) in weapons.into_iter().enumerate() {
+            println!("<<<<<<<<< Weapon {} >>>>>>>>>", i + 1);
+            println!("ID: {:?}", weapon.id);
+            println!("Name: {:?}", weapon.info.name);
+            println!("Type: {:?}", weapon.info.r#type);
+            println!("Description (Flavor): {:?} ({})", weapon.info.description, weapon.info.flavor);
+            println!("Info: {:?}", weapon.info);
+            println!("Stats: {:?}", weapon.stats);
+            println!("Effect: {:?}", weapon.effect);
+            println!("Flaw: {:?}", weapon.flaw);
+            println!();
+        }
+    }
+
+    pub fn create_gear(count: usize) -> Vec<Gear> {
+        use GearID::*;
+        let gear_pool = vec![ReinforcedPlating, AmmoFeederRig, BlastShield, ShockwaveGrenade, CloakFieldUnit, GrappleLauncher, EchoBeacon, HoloDecoy, NanoMistInjector, StabilizerDrone, AntitoxinSpray, Painkillers, AutoTurret, PatchKit, SensorNode, LaserTripwire, PortableMinefield, ArcWelder, DetonationRemote, NanoGlueBomb, PlasmaCutter, HiveScanner, ChitinBait, ConfusionCollar, BugPheromoneBomb, ShellPack, PlasmaShield, UltraShredRounds, GravityField, EchoPulse, HoloDoubler, DoppelgangerSuit, NanoPatch, StimPack, FragGrenade, SmokeBomb, AdrenalineInjector, TrapKit];
+        let mut rng = rand::rng();
+
+        (0..count)
+            .map(|_| {
+                let gear = *gear_pool.choose(&mut rng).unwrap();
+                Gear::new(gear)
+            })
+            .collect()
+    }
+
+    pub fn print_gear(gear: Vec<Gear>) {
+        for (i, item) in gear.into_iter().enumerate() {
+            println!("+++++++++++ Gear {} +++++++++++", i);
+            println!("ID: {:?}", item.id);
+            println!("Name: {:?}", item.info.name);
+            println!("Type: {:?}", item.info.r#type);
+            println!("Description (Flavor): {:?} ({})", item.info.description, item.info.flavor);
+            println!("Stats: {:?}", item.stats);
+            println!("Effect: {:?}", item.effect);
+            println!("Flaw: {:?}", item.flaw);
+            println!();
         }
     }
 }
