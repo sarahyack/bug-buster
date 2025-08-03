@@ -7,6 +7,7 @@ use std::default::Default;
 
 use crate::boost;
 use crate::utils::RandBools as Bools;
+use crate::armory::Armory;
 
 // ============ Classes =================
 
@@ -172,7 +173,7 @@ fn get_stats(class: TrooperClass, traits: &TrooperTraits, flaws: &TrooperFlaws) 
 }
 
 pub struct Trooper {
-    class: TrooperClass,
+    pub class: TrooperClass,
     perk: ClassPerk,
     r#trait: TrooperTraits,
     flaw: TrooperFlaws,
@@ -221,5 +222,17 @@ impl Commander {
             println!("Stats: {:?}", trooper.stats);
             println!();
         }
+    }
+
+    fn print_trooper_gear(num: usize, trooper: Trooper) {
+        println!("//////// Trooper {} \\\\\\\\\\\\\\\\\\\\", num + 1);
+        Armory::print_class_weapons(trooper.class);
+        Armory::print_class_gear(trooper.class);
+    }
+
+    pub fn print_team_gear(team: Vec<Trooper>) {
+    for (i, trooper) in team.into_iter().enumerate() {
+        Self::print_trooper_gear(i, trooper);
+    }
     }
 }

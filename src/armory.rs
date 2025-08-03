@@ -28,31 +28,6 @@ enum EquipmentID {
     GearID(GearID),
 }
 
-fn allowed_for_class(id: EquipmentID, class: TrooperClass) -> bool {
-    match id {
-        EquipmentID::WeaponID(wid) => {
-            WEAPON_RESTRICTIONS
-                .iter()
-                .find(|r| r.id == wid)
-                .map(|r| match r.classes {
-                    Some(classes) => classes.contains(&class),
-                    None => true,
-                })
-                .unwrap_or(true)
-        },
-        EquipmentID::GearID(gid) => {
-            GEAR_RESTRICTIONS
-                .iter()
-                .find(|g| g.id == gid)
-                .map(|g| match g.classes {
-                    Some(classes) => classes.contains(&class),
-                    None => true,
-                })
-                .unwrap_or(true)
-        }
-    }
-}
-
 //
 
 // ============ EFFECTS & TARGETING =================
@@ -164,6 +139,46 @@ pub enum EquipmentFlaw {
 // Declarations
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum WeaponID { #[default] Minigun, Chaingun, ScopedRifle, PulseSMG, MagShellCannon, VenomSpiker, Flamethrower, SlugCannon, MarksmanCarbine, Railgun, Crossbolt, Spikeshot, AntigenBeam, IonScattergun, AssaultRifle, SMG, RepeaterBow, AutoPistol, SawedOffShotgun, PulsePistol, Spikeling, MicroGrenadeLauncher, HandCannon, Syringer, PlasmaDerringer, BackupRevolver, LightSMG, CombatKnife, PowerMace, ShockBlade, Cleaver, InjectorGauntlet, DoomWrench, AspLash, ArcGauntlet, MonofilamentBlade, TacticalBaton  }
+
+static ALL_WEAPON_IDS: &[WeaponID] = &[
+    WeaponID:: Minigun,
+    WeaponID:: Chaingun,
+    WeaponID:: ScopedRifle,
+    WeaponID:: PulseSMG,
+    WeaponID:: MagShellCannon,
+    WeaponID:: VenomSpiker,
+    WeaponID:: Flamethrower,
+    WeaponID:: SlugCannon,
+    WeaponID:: MarksmanCarbine,
+    WeaponID:: Railgun,
+    WeaponID:: Crossbolt,
+    WeaponID:: Spikeshot,
+    WeaponID:: AntigenBeam,
+    WeaponID:: IonScattergun,
+    WeaponID:: AssaultRifle,
+    WeaponID:: SMG,
+    WeaponID:: RepeaterBow,
+    WeaponID:: AutoPistol,
+    WeaponID:: SawedOffShotgun,
+    WeaponID:: PulsePistol,
+    WeaponID:: Spikeling,
+    WeaponID:: MicroGrenadeLauncher,
+    WeaponID:: HandCannon,
+    WeaponID:: Syringer,
+    WeaponID:: PlasmaDerringer,
+    WeaponID:: BackupRevolver,
+    WeaponID:: LightSMG,
+    WeaponID:: CombatKnife,
+    WeaponID:: PowerMace,
+    WeaponID:: ShockBlade,
+    WeaponID:: Cleaver,
+    WeaponID:: InjectorGauntlet,
+    WeaponID:: DoomWrench,
+    WeaponID:: AspLash,
+    WeaponID:: ArcGauntlet,
+    WeaponID:: MonofilamentBlade,
+    WeaponID:: TacticalBaton,
+];
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum WeaponType { #[default] Primary, Secondary, Melee }
@@ -965,7 +980,48 @@ impl Weapon {
 // be used as a external sort of api function, idk.
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
-enum GearID { #[default] ReinforcedPlating, AmmoFeederRig, BlastShield, ShockwaveGrenade, CloakFieldUnit, GrappleLauncher, EchoBeacon, HoloDecoy, NanoMistInjector, StabilizerDrone, AntitoxinSpray, Painkillers, AutoTurret, PatchKit, SensorNode, LaserTripwire, PortableMinefield, ArcWelder, DetonationRemote, NanoGlueBomb, PlasmaCutter, HiveScanner, ChitinBait, ConfusionCollar, BugPheromoneBomb, ShellPack, PlasmaShield, UltraShredRounds, GravityField, EchoPulse, HoloDoubler, DoppelgangerSuit, NanoPatch, StimPack, FragGrenade, SmokeBomb, AdrenalineInjector, TrapKit, }
+enum GearID { #[default] ReinforcedPlating, AmmoFeederRig, BlastShield, ShockwaveGrenade, CloakFieldUnit, GrappleLauncher, EchoBeacon, HoloDecoy, NanoMistInjector, StabilizerDrone, AntitoxinSpray, Painkillers, AutoTurret, PatchKit, SensorNode, LaserTripwire, PortableMinefield, ArcWelder, DetonationRemote, NanoGlueBomb, PlasmaCutter, HiveScanner, ChitinBait, ConfusionCollar, BugPheromoneBomb, ShellPack, PlasmaShield, UltraShredRounds, GravityField, EchoPulse, HoloDoubler, DoppelgangerSuit, NanoPatch, StimPack, FragGrenade, SmokeBomb, AdrenalineInjector, TrapKit }
+
+static ALL_GEAR_IDS: &[GearID] = &[
+    GearID::ReinforcedPlating,
+    GearID::AmmoFeederRig,
+    GearID::BlastShield,
+    GearID::ShockwaveGrenade,
+    GearID::CloakFieldUnit,
+    GearID::GrappleLauncher,
+    GearID::EchoBeacon,
+    GearID::HoloDecoy,
+    GearID::NanoMistInjector,
+    GearID::StabilizerDrone,
+    GearID::AntitoxinSpray,
+    GearID::Painkillers,
+    GearID::AutoTurret,
+    GearID::PatchKit,
+    GearID::SensorNode,
+    GearID::LaserTripwire,
+    GearID::PortableMinefield,
+    GearID::ArcWelder,
+    GearID::DetonationRemote,
+    GearID::NanoGlueBomb,
+    GearID::PlasmaCutter,
+    GearID::HiveScanner,
+    GearID::ChitinBait,
+    GearID::ConfusionCollar,
+    GearID::BugPheromoneBomb,
+    GearID::ShellPack,
+    GearID::PlasmaShield,
+    GearID::UltraShredRounds,
+    GearID::GravityField,
+    GearID::EchoPulse,
+    GearID::HoloDoubler,
+    GearID::DoppelgangerSuit,
+    GearID::NanoPatch,
+    GearID::StimPack,
+    GearID::FragGrenade,
+    GearID::SmokeBomb,
+    GearID::AdrenalineInjector,
+    GearID::TrapKit,
+];
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum GearType {
@@ -1685,22 +1741,58 @@ impl Gear {
 pub struct Armory;
 
 impl Armory {
-    pub fn create_weapons(count: usize) -> Vec<Weapon> {
-        use WeaponID::*;
-        let weapon_pool = vec![Minigun, Chaingun, ScopedRifle, PulseSMG, MagShellCannon, VenomSpiker, Flamethrower, SlugCannon, MarksmanCarbine, Railgun, Crossbolt, Spikeshot, AntigenBeam, IonScattergun, AssaultRifle, SMG, RepeaterBow, AutoPistol, SawedOffShotgun, PulsePistol, Spikeling, MicroGrenadeLauncher, HandCannon, Syringer, PlasmaDerringer, BackupRevolver, LightSMG, CombatKnife, PowerMace, ShockBlade, Cleaver, InjectorGauntlet, DoomWrench, AspLash, ArcGauntlet, MonofilamentBlade, TacticalBaton];
-        let mut rng = rand::rng();
+    fn allowed_for_class(id: EquipmentID, class: TrooperClass) -> bool {
+        match id {
+            EquipmentID::WeaponID(wid) => {
+                WEAPON_RESTRICTIONS
+                    .iter()
+                    .find(|r| r.id == wid)
+                    .map(|r| match r.classes {
+                        Some(classes) => classes.contains(&class),
+                        None => true,
+                    })
+                    .unwrap_or(true)
+            },
+            EquipmentID::GearID(gid) => {
+                GEAR_RESTRICTIONS
+                    .iter()
+                    .find(|g| g.id == gid)
+                    .map(|g| match g.classes {
+                        Some(classes) => classes.contains(&class),
+                        None => true,
+                    })
+                    .unwrap_or(true)
+            }
+        }
+    }
 
-        (0..count)
-            .map(|_| {
-                let weapon = *weapon_pool.choose(&mut rng).unwrap();
-                Weapon::new(weapon)
-            })
+    fn fetch_allowed_weapons(class: TrooperClass) -> Vec<WeaponID> {
+        ALL_WEAPON_IDS
+            .iter()
+            .copied()
+            .filter(|wid| Self::allowed_for_class(EquipmentID::WeaponID(*wid), class))
             .collect()
     }
 
-    pub fn print_weapons(weapons: Vec<Weapon>) {
-        for (i, weapon) in weapons.into_iter().enumerate() {
-            println!("<<<<<<<<< Weapon {} >>>>>>>>>", i + 1);
+    fn load_weapons(class: TrooperClass) -> Vec<Weapon> {
+        let allowed_weapons = Self::fetch_allowed_weapons(class);
+        let mut weapons = vec![];
+
+        for (_, w) in allowed_weapons.into_iter().enumerate() {
+            let weapon = Weapon::new(w);
+            weapons.push(weapon);
+        }
+
+        weapons
+    }
+
+    pub fn print_class_weapons(class: TrooperClass) {
+        let weapons: Vec<Weapon> = Self::load_weapons(class);
+        println!("");
+        println!("Trooper Class: {:?}", class);
+        println!("");
+        for (_, weapon) in weapons.into_iter().enumerate() {
+            println!("<<<<<<<<< {:?} >>>>>>>>>", weapon.id);
             println!("ID: {:?}", weapon.id);
             println!("Name: {:?}", weapon.info.name);
             println!("Type: {:?}", weapon.info.r#type);
@@ -1713,23 +1805,33 @@ impl Armory {
         }
     }
 
-    pub fn create_gear(count: usize) -> Vec<Gear> {
-        use GearID::*;
-        let gear_pool = vec![ReinforcedPlating, AmmoFeederRig, BlastShield, ShockwaveGrenade, CloakFieldUnit, GrappleLauncher, EchoBeacon, HoloDecoy, NanoMistInjector, StabilizerDrone, AntitoxinSpray, Painkillers, AutoTurret, PatchKit, SensorNode, LaserTripwire, PortableMinefield, ArcWelder, DetonationRemote, NanoGlueBomb, PlasmaCutter, HiveScanner, ChitinBait, ConfusionCollar, BugPheromoneBomb, ShellPack, PlasmaShield, UltraShredRounds, GravityField, EchoPulse, HoloDoubler, DoppelgangerSuit, NanoPatch, StimPack, FragGrenade, SmokeBomb, AdrenalineInjector, TrapKit];
-        let mut rng = rand::rng();
-
-        (0..count)
-            .map(|_| {
-                let gear = *gear_pool.choose(&mut rng).unwrap();
-                Gear::new(gear)
-            })
+    fn fetch_allowed_gear(class: TrooperClass) -> Vec<GearID> {
+        ALL_GEAR_IDS
+            .iter()
+            .copied()
+            .filter(|gid| Self::allowed_for_class(EquipmentID::GearID(*gid), class))
             .collect()
     }
 
-    pub fn print_gear(gear: Vec<Gear>) {
-        for (i, item) in gear.into_iter().enumerate() {
-            println!("+++++++++++ Gear {} +++++++++++", i);
-            println!("ID: {:?}", item.id);
+    fn load_gear(class: TrooperClass) -> Vec<Gear> {
+        let allowed_gear = Self::fetch_allowed_gear(class);
+        let mut gear = vec![];
+
+        for (_, g) in allowed_gear.into_iter().enumerate() {
+            let item = Gear::new(g);
+            gear.push(item);
+        }
+
+        gear
+    }
+
+    pub fn print_class_gear(class: TrooperClass) {
+        let gear: Vec<Gear> = Self::load_gear(class);
+        println!("");
+        println!("Trooper Class: {:?}", class);
+        println!("");
+        for (_, item) in gear.into_iter().enumerate() {
+            println!("+++++++++++ {:?} +++++++++++", item.id);
             println!("Name: {:?}", item.info.name);
             println!("Type: {:?}", item.info.r#type);
             println!("Description (Flavor): {:?} ({})", item.info.description, item.info.flavor);
@@ -1737,6 +1839,23 @@ impl Armory {
             println!("Effect: {:?}", item.effect);
             println!("Flaw: {:?}", item.flaw);
             println!();
+        }
+    }
+}
+
+pub struct Loadout {
+    weapons: Vec<Weapon>,
+    gear: Vec<Gear>,
+}
+
+impl Loadout {
+    pub fn new(class: TrooperClass) -> Self {
+        let weapons = Armory::load_weapons(class);
+        let gear = Armory::load_gear(class);
+
+        Loadout {
+            weapons,
+            gear,
         }
     }
 }
