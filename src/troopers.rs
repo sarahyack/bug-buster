@@ -7,7 +7,7 @@ use std::default::Default;
 
 use crate::boost;
 use crate::utils::RandBools as Bools;
-use crate::armory::Armory;
+use crate::armory::{Armory, Loadout};
 
 // ============ Classes =================
 
@@ -174,6 +174,7 @@ fn get_stats(class: TrooperClass, traits: &TrooperTraits, flaws: &TrooperFlaws) 
 
 pub struct Trooper {
     pub class: TrooperClass,
+    loadout: Loadout,
     perk: ClassPerk,
     r#trait: TrooperTraits,
     flaw: TrooperFlaws,
@@ -182,6 +183,7 @@ pub struct Trooper {
 
 impl Trooper {
     fn new(class: TrooperClass) -> Self {
+        let loadout = Armory::create_loadout(class);
         let perk = get_class_perk(&class);
         let r#trait = determine_trait();
         let flaw = determine_flaw();
@@ -189,6 +191,7 @@ impl Trooper {
 
         Trooper {
             class,
+            loadout,
             perk,
             r#trait,
             flaw,
@@ -216,6 +219,7 @@ impl Commander {
         for (i, trooper) in team.into_iter().enumerate() {
             println!(" ======= Trooper {} ======== ", i + 1);
             println!("Class: {:?}", trooper.class);
+            println!("Loadout: {:?}", trooper.loadout);
             println!("Perk: {:?}", trooper.perk);
             println!("Trait: {:?}", trooper.r#trait);
             println!("Flaw: {:?}", trooper.flaw);
@@ -226,8 +230,10 @@ impl Commander {
 
     fn print_trooper_gear(num: usize, trooper: Trooper) {
         println!("//////// Trooper {} \\\\\\\\\\\\\\\\\\\\", num + 1);
-        Armory::print_class_weapons(trooper.class);
-        Armory::print_class_gear(trooper.class);
+        println!();
+        println!("Trooper Class: {:?}", trooper.class);
+        println!();
+        Armory::print_loadout(trooper.loadout);
     }
 
     pub fn print_team_gear(team: Vec<Trooper>) {
