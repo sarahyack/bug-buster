@@ -6,12 +6,8 @@ use std::default::Default;
 
 use crate::boost;
 use crate::utils::{SafeSub, RandBools as Bools};
-use crate::armory::Effect;
 
 // Enums, Traits, & Constants
-// TODO: Add Effect/Debuff/Buff system as according to the various kinds of attack effects outlined
-// in armory. (Probably handled by Broodmother once Broodmother's been fleshed out and isn't in
-// debug(hah) mode anymore.)
 
 #[derive(Debug, Copy, Clone)]
 enum BugClass { Charger, Spitter, Swarmer, Hivemind, Pincer, Burrower, Exploder, Jumper, Tank }
@@ -386,7 +382,7 @@ impl Bug {
         let tactic = determine_tactic(species);
         let traits = determine_traits(species);
         let flaws = determine_flaws(species);
-        let mut stats = get_stats(species, &traits, &flaws);
+        let stats = get_stats(species, &traits, &flaws);
 
         Bug {
             species,
@@ -400,11 +396,6 @@ impl Bug {
         }
     }
 }
-
-// TODO: Create Broodmother Struct/methods
-// NOTE: The Broodmother struct & it's associated impl & methods are what created the random
-// generation of bugs per turn. It's the Spawner essentially.
-// NOTE: Additional note, the current implementation is only a test version.
 
 pub struct Broodmother;
 

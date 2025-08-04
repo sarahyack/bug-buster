@@ -4,13 +4,6 @@ use crate::troopers::TrooperClass;
 use rand::prelude::IndexedRandom;
 
 // TODO: Remove Effect Matchup in GearStats (AFTER ARMORY) (See related notes down by GearStats)
-// TODO: Create Armory Struct (Handles all weapon/gear creation & logic, but prob for now creates a
-// placeholder system for effects, and debug stats generation). The armory should also be able to
-// fill Loadout with weapons
-// TODO: Create a Loadout Struct either here or in Troopers (prob Troopers), which should determine how
-// many slots for weapons and gear the provided trooper has based on the provided class, and then
-// is provided with the requested weapons somehow from Armory, and that's where the equipment and
-// their effects are stored for use by the turn handler or commander.
 // NOTE: The effects for the requested weapons/gear from Loadout should be fetched by Armory
 // NOTE: This isn't even taking into account the fact that the weapons are pickable by the player,
 // that'll have to be handled by either the commander or maybe the tui? No def the commander. Which
@@ -975,9 +968,6 @@ impl Weapon {
 //
 
 // ====================== GEAR ===========================
-// TODO: Create GearStats, get_gear_stats(), and then can implement get_equipment_stats() which
-// will serve as the actual fetcher function for both structs. Possibly, either that or it'll only
-// be used as a external sort of api function, idk.
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum GearID { #[default] ReinforcedPlating, AmmoFeederRig, BlastShield, ShockwaveGrenade, CloakFieldUnit, GrappleLauncher, EchoBeacon, HoloDecoy, NanoMistInjector, StabilizerDrone, AntitoxinSpray, Painkillers, AutoTurret, PatchKit, SensorNode, LaserTripwire, PortableMinefield, ArcWelder, DetonationRemote, NanoGlueBomb, PlasmaCutter, HiveScanner, ChitinBait, ConfusionCollar, BugPheromoneBomb, ShellPack, PlasmaShield, UltraShredRounds, GravityField, EchoPulse, HoloDoubler, DoppelgangerSuit, NanoPatch, StimPack, FragGrenade, SmokeBomb, AdrenalineInjector, TrapKit }
