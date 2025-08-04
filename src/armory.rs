@@ -176,7 +176,6 @@ static ALL_WEAPON_IDS: &[WeaponID] = &[
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum WeaponType { #[default] Primary, Secondary, Melee }
 
-
 #[derive(Default, Debug, Copy, Clone)]
 struct WeaponInfo {
     id: WeaponID,
@@ -453,10 +452,6 @@ static WEAPON_INFO: &[WeaponInfo] = &[
         flavor:     "Tough, basic, reliable."
     },
 ];
-
-fn get_weapon_info(id: WeaponID) -> WeaponInfo {
-    WEAPON_INFO.iter().find(|w|  w.id == id).expect(&format!("Invalid Weapon ID: {:?}", id)).clone()
-}
 
 #[derive(Default, Debug, Copy, Clone)]
 struct WeaponRestrictions {
@@ -937,10 +932,6 @@ static WEAPON_STATS: &[WeaponStats] = &[
     },
 ];
 
-fn get_weapon_stats(id: WeaponID) -> WeaponStats {
-    WEAPON_STATS.iter().find(|w|  w.id == id).expect(&format!("Invalid Weapon ID: {:?}", id)).clone()
-}
-
 #[derive(Default, Clone, Debug)]
 pub struct Weapon {
     id: WeaponID,
@@ -952,8 +943,8 @@ pub struct Weapon {
 
 impl Weapon {
     fn new(id: WeaponID) -> Self {
-        let info = get_weapon_info(id);
-        let stats = get_weapon_stats(id);
+        let info = Armory::get_weapon_info(id);
+        let stats = Armory::get_weapon_stats(id);
         
         Weapon {
             id,
@@ -1301,10 +1292,6 @@ static GEAR_INFO: &[GearInfo] = &[
         flavor:         "It’s not paranoia if the bugs really are everywhere.",
     },
 ];
-
-fn get_gear_info(id: GearID) -> GearInfo {
-    GEAR_INFO.iter().find(|g| g.id == id).expect(&format!("Invalid Gear ID: {:?}", id)).clone()
-}
 
 #[derive(Default, Debug, Copy, Clone)]
 struct GearRestrictions {
@@ -1700,10 +1687,6 @@ static GEAR_STATS: &[GearStats] = &[
     },
 ];
 
-fn get_gear_stats(id: GearID) -> GearStats {
-    GEAR_STATS.iter().find(|g| g.id == id).expect(&format!("Invalid Gear ID: {:?}", id)).clone()
-}
-
 #[derive(Default, Clone, Debug)]
 pub struct Gear {
     id: GearID,
@@ -1715,8 +1698,8 @@ pub struct Gear {
 
 impl Gear {
     fn new(id: GearID) -> Self {
-        let info = get_gear_info(id);
-        let stats = get_gear_stats(id);
+        let info = Armory::get_gear_info(id);
+        let stats = Armory::get_gear_stats(id);
 
         Gear {
             id,
@@ -1731,6 +1714,22 @@ impl Gear {
 pub struct Armory;
 
 impl Armory {
+    fn get_gear_info(id: GearID) -> GearInfo {
+        GEAR_INFO.iter().find(|g| g.id == id).expect(&format!("Invalid Gear ID: {:?}", id)).clone()
+    }
+    
+    fn get_gear_stats(id: GearID) -> GearStats {
+        GEAR_STATS.iter().find(|g| g.id == id).expect(&format!("Invalid Gear ID: {:?}", id)).clone()
+    }
+
+    fn get_weapon_stats(id: WeaponID) -> WeaponStats {
+        WEAPON_STATS.iter().find(|w|  w.id == id).expect(&format!("Invalid Weapon ID: {:?}", id)).clone()
+    }
+
+    fn get_weapon_info(id: WeaponID) -> WeaponInfo {
+        WEAPON_INFO.iter().find(|w|  w.id == id).expect(&format!("Invalid Weapon ID: {:?}", id)).clone()
+    }
+
     fn allowed_for_class(id: EquipmentID, class: TrooperClass) -> bool {
         match id {
             EquipmentID::WeaponID(wid) => {
