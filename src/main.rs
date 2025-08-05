@@ -1,5 +1,5 @@
 mod bugs;
-mod environments;
+mod hive;
 mod battlefield;
 mod troopers;
 mod armory;
@@ -8,6 +8,7 @@ mod utils;
 
 use bugs::Broodmother;
 use troopers::Commander;
+use hive::Cartographer;
 // use armory::Armory;
 
 fn main() {
@@ -17,4 +18,5 @@ fn main() {
     let team = Commander::test_trooper_creation(3);
     Commander::spawn_troopers(&team);
     Commander::print_team_gear(team);
+    Cartographer::spawn_chambers(7);
 }
