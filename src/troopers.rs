@@ -219,7 +219,6 @@ impl Commander {
         for (i, trooper) in team.into_iter().enumerate() {
             println!(" ======= Trooper {} ======== ", i + 1);
             println!("Class: {:?}", trooper.class);
-            println!("Loadout: {:?}", trooper.loadout);
             println!("Perk: {:?}", trooper.perk);
             println!("Trait: {:?}", trooper.r#trait);
             println!("Flaw: {:?}", trooper.flaw);
