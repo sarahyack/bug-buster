@@ -364,6 +364,7 @@ fn get_stats(species: BugSpecies, traits: &BugTraits, flaws: &BugFlaws) -> BugSt
 
 // Bug Struct
 
+#[derive(Debug, Clone)]
 pub struct Bug {
     species: BugSpecies,
     name: &'static str,
