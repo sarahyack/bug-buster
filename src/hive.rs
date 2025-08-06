@@ -1,4 +1,13 @@
 #![allow(dead_code)]
+// TODO: Add Chamber Effects, including buffs to troopers/bugs, and debuffs to troopers/bug
+// NOTE: At least add a pool or list to choose from, so I can move on to implementing the
+// turn_handler
+// TODO: Add ChamberState back and implement it
+// TODO: Add likely bug types matched to chambertypes, NOT CONNECTED IN CHAMBERSTATE (because
+// ChamberState houses which bugs from a wave are alive and their states). Probably actually in
+// chamber, which adds a whole refactor nonsense.
+// TODO: Rebalance the weights!!
+// TODO: Prob remove the imports since I prob won't need them'(Reevaluate after adding effect)
 // Imports
 use rand::Rng;
 
@@ -100,10 +109,10 @@ static CHAMBER_WEIGHTS: &[ChamberWeight] = &[
     ChamberWeight { r#type: ChamberType::Collapsed, weight: 1, possible_neighbors: &[ChamberType::Tunnel] },
 ];
 
-static REQ_CHAMBERS: &[(ChamberType, usize)] = &[
-    (ChamberType::Clearing, 1),
-    (ChamberType::Flooded, 1),
-    (ChamberType::FoodStorage, 1),
+static REQ_CHAMBERS: &[(ChamberType, usize, bool)] = &[
+    (ChamberType::Clearing, 1, false),
+    (ChamberType::Flooded, 1, false),
+    (ChamberType::FoodStorage, 1, true),
 ];
 
 #[derive(Clone, Debug)]
@@ -117,6 +126,10 @@ pub struct Chamber {
 pub struct Cartographer;
 
 impl Cartographer {
+    fn restrict_chambers(pool: &mut Vec<ChamberWeight>, ctype: &ChamberType) {
+        pool.retain(|cw| &cw.r#type != ctype);
+    }
+
     fn get_chamber_weight<'a>(ctype: &ChamberType, pool: &'a [ChamberWeight]) -> Option<&'a ChamberWeight> {
         pool.iter().find(|cw| &cw.r#type == ctype)
     }
@@ -154,7 +167,7 @@ impl Cartographer {
         }
 
         if (pos == 0 || pos == chambers.len() - 1)
-            && REQ_CHAMBERS.iter().any(|(ct, _)| ct == ctype)
+            && REQ_CHAMBERS.iter().any(|(ct, _, _)| ct == ctype)
         {
             return false;
         }
@@ -176,15 +189,16 @@ impl Cartographer {
 
     fn gen_ctype_list(num_chambers: usize) -> Vec<ChamberType> {
         let mut chambers = Vec::new();
+        let mut picker_pool = CHAMBER_WEIGHTS.to_vec();
 
         chambers.push(ChamberType::Entrance);
-        let entrance_neighbors = Self::allowed_next_chambers(&ChamberType::Entrance, CHAMBER_WEIGHTS);
+        let entrance_neighbors = Self::allowed_next_chambers(&ChamberType::Entrance, &picker_pool);
         let mut ctype = Self::weighted_random_type(&entrance_neighbors);
         chambers.push(ctype);
 
         for _ in 1..num_chambers {
             let prev_type = chambers.last().unwrap();
-            let allowed = Self::allowed_next_chambers(prev_type, CHAMBER_WEIGHTS);
+            let allowed = Self::allowed_next_chambers(prev_type, &picker_pool);
             let mut tries = 0;
             loop {
                 ctype = Self::weighted_random_type(&allowed);
@@ -201,8 +215,11 @@ impl Cartographer {
         }
         chambers.push(ChamberType::EggChamber);
 
-        for (ctype, n) in REQ_CHAMBERS {
+        for (ctype, n, restrict) in REQ_CHAMBERS {
             Self::guarantee_chambers(&mut chambers, ctype.clone(), *n);
+            if *restrict {
+                Self::restrict_chambers(&mut picker_pool, ctype);
+            }
         }
 
         chambers
