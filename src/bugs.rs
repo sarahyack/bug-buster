@@ -5,7 +5,7 @@
 use rand::{prelude::IndexedRandom};
 use std::default::Default;
 
-use crate::boost;
+use crate::{boost, log};
 use crate::utils::{SafeSub, RandBools as Bools};
 
 // Enums, Traits, & Constants
@@ -395,7 +395,6 @@ impl Bug {
         let mut base = Self::get_base_stats(species);
         Self::apply_modifiers(&mut base, traits, flaws)
     }
-
 }
 
 pub struct Broodmother;
@@ -420,15 +419,14 @@ impl Broodmother {
 
     pub fn debug_wave(wave: &[Bug]) {
         for (i, bug) in wave.iter().enumerate() {
-            println!("--- BUG {} ---", i + 1);
-            println!("Species: {:?} ({})", bug.species, bug.name);
-            println!("Family: {}", bug.family);
-            println!("Class: {:?}", bug.class);
-            println!("Tactic: {:?}", bug.tactic);
-            println!("Stats: {:?}", bug.stats);
-            println!("Traits: {:?}", bug.traits);
-            println!("Flaws: {:?}", bug.flaws);
-            println!();
+            log!(info, format!("--- BUG {} ---", i + 1), false);
+            log!(info, format!("Species: {:?} ({})", bug.species, bug.name), false);
+            log!(info, format!("Family: {}", bug.family), false);
+            log!(info, format!("Class: {:?}", bug.class), false);
+            log!(info, format!("Tactic: {:?}", bug.tactic), false);
+            log!(info, format!("Stats: {:?}", bug.stats), false);
+            log!(info, format!("Traits: {:?}", bug.traits), false);
+            log!(info, format!("Flaws: {:?}", bug.flaws), true);
         }
     }
 }

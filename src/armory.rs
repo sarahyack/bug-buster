@@ -1,13 +1,13 @@
 #![allow(dead_code)]
 // Imports
+use crate::log;
 use crate::troopers::TrooperClass;
 use rand::prelude::IndexedRandom;
 
 // TODO: Remove Effect Matchup in GearStats (AFTER ARMORY) (See related notes down by GearStats)
 // NOTE: The effects for the requested weapons/gear from Loadout should be fetched by Armory
-// NOTE: This isn't even taking into account the fact that the weapons are pickable by the player,
-// that'll have to be handled by either the commander or maybe the tui? No def the commander. Which
-// means I should make the Troopers before I do the Armory.
+// TODO: Add an actual Effect list/enum/whatever to be passed to the turn handler to be applied to
+// target.
 
 // GENERAL ARMORY DECLARATIONS
 
@@ -1876,29 +1876,27 @@ impl Armory {
         Loadout::new(weapons, gear)
     }
 
-    pub fn print_loadout(loadout: Loadout) {
+    pub fn log_loadout(loadout: Loadout) {
         for (_, weapon) in loadout.weapons.into_iter().enumerate() {
-            println!("<<<<<<<<< {:?} >>>>>>>>>", weapon.id);
-            println!("ID: {:?}", weapon.id);
-            println!("Name: {:?}", weapon.info.name);
-            println!("Type: {:?}", weapon.info.r#type);
-            println!("Description (Flavor): {:?} ({})", weapon.info.description, weapon.info.flavor);
-            println!("Info: {:?}", weapon.info);
-            println!("Stats: {:?}", weapon.stats);
-            println!("Effect: {:?}", weapon.effect);
-            println!("Flaw: {:?}", weapon.flaw);
-            println!();
+            log!(info, format!("<<<<<<<<< {:?} >>>>>>>>>", weapon.id), false);
+            log!(info, format!("ID: {:?}", weapon.id), false);
+            log!(info, format!("Name: {:?}", weapon.info.name), false);
+            log!(info, format!("Type: {:?}", weapon.info.r#type), false);
+            log!(info, format!("Description (Flavor): {:?} ({})", weapon.info.description, weapon.info.flavor), false);
+            log!(info, format!("Info: {:?}", weapon.info), false);
+            log!(info, format!("Stats: {:?}", weapon.stats), false);
+            log!(info, format!("Effect: {:?}", weapon.effect), false);
+            log!(info, format!("Flaw: {:?}", weapon.flaw), true);
         }
 
         for (_, item) in loadout.gear.into_iter().enumerate() {
-            println!("+++++++++++ {:?} +++++++++++", item.id);
-            println!("Name: {:?}", item.info.name);
-            println!("Type: {:?}", item.info.r#type);
-            println!("Description (Flavor): {:?} ({})", item.info.description, item.info.flavor);
-            println!("Stats: {:?}", item.stats);
-            println!("Effect: {:?}", item.effect);
-            println!("Flaw: {:?}", item.flaw);
-            println!();
+            log!(info, format!("+++++++++++ {:?} +++++++++++", item.id), false);
+            log!(info, format!("Name: {:?}", item.info.name), false);
+            log!(info, format!("Type: {:?}", item.info.r#type), false);
+            log!(info, format!("Description (Flavor): {:?} ({})", item.info.description, item.info.flavor), false);
+            log!(info, format!("Stats: {:?}", item.stats), false);
+            log!(info, format!("Effect: {:?}", item.effect), false);
+            log!(info, format!("Flaw: {:?}", item.flaw), true);
         }
     }
 }

@@ -4,13 +4,15 @@
 // turn_handler
 // TODO: Add ChamberState back and implement it
 // TODO: Add likely bug types matched to chambertypes, NOT CONNECTED IN CHAMBERSTATE (because
-// ChamberState houses which bugs from a wave are alive and their states). Probably actually in
+// ChamberState houses which bugs from a wave are alive and their states, well at least references
+// to Bug objects, which then can have their states queried). Probably actually in
 // chamber, which adds a whole refactor nonsense.
 // TODO: Rebalance the weights!!
 // TODO: Prob remove the imports since I prob won't need them'(Reevaluate after adding effect)
 // Imports
 use rand::Rng;
 
+use crate::log;
 use crate::bugs::{Broodmother, Bug};
 use crate::troopers::Commander;
 use crate::armory::{Armory, Gear};
@@ -22,6 +24,9 @@ enum ChamberType { Entrance, Tunnel, Clearing, BroodChamber, FoodStorage, Floode
 
 #[derive(Clone, Debug)]
 enum Hazard {  }
+
+#[derive(Copy, Clone, Debug)]
+enum Boon {  }
 
 #[derive(Clone, Debug)]
 struct ChamberInfo {
@@ -239,7 +244,7 @@ impl Cartographer {
 
     pub fn print_chambers(chambers: Vec<Chamber>) {
         for chamber in chambers {
-            println!("Chamber {} ({:?}) connects to {:?}", chamber.id, chamber.r#type, chamber.neighbors);
+            log!(info, format!("Chamber {} ({:?}) connects to {:?}", chamber.id, chamber.r#type, chamber.neighbors), false);
         }
     }
 

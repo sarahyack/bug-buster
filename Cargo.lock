@@ -32,6 +32,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm 0.29.0",
  "inquire",
+ "once_cell",
  "rand",
  "ratatui",
 ]

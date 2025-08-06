@@ -6,7 +6,7 @@
 use rand::prelude::IndexedRandom;
 use std::default::Default;
 
-use crate::boost;
+use crate::{boost, log};
 use crate::utils::RandBools as Bools;
 use crate::armory::{Armory, Loadout};
 
@@ -16,7 +16,6 @@ use crate::armory::{Armory, Loadout};
 pub enum TrooperClass { Heavy, Scout, Engineer, Medic, ExoTech, Handler, Decoy }
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum ClassPerk { MoraleAura, BugScan, DeployBoost, CombatTriage, ArmorShred, HiveScent, EchoProtocol }
-
 
 #[derive(Default, Debug, Copy, Clone)]
 struct TrooperTraits {
@@ -33,7 +32,6 @@ struct TrooperTraits {
     fast_reflexes: bool,
 }
 
-
 #[derive(Default, Debug, Copy, Clone)]
 struct TrooperFlaws {
         old_wounds: bool,
@@ -48,7 +46,6 @@ struct TrooperFlaws {
         tunnel_vision: bool,
         glass_jaw: bool,
 }
-
 
 #[derive(Default, Debug, Copy, Clone)]
 struct TrooperStats {
@@ -70,7 +67,6 @@ impl TrooperStats {
         }
     }
 }
-
 
 pub struct Trooper {
     pub class: TrooperClass,
@@ -222,27 +218,24 @@ impl Commander {
     }
     pub fn spawn_troopers(team: &[Trooper]) {
         for (i, trooper) in team.into_iter().enumerate() {
-            println!(" ======= Trooper {} ======== ", i + 1);
-            println!("Class: {:?}", trooper.class);
-            println!("Perk: {:?}", trooper.perk);
-            println!("Trait: {:?}", trooper.r#trait);
-            println!("Flaw: {:?}", trooper.flaw);
-            println!("Stats: {:?}", trooper.stats);
-            println!();
+            log!(info, format!(" ======= Trooper {} ======== ", i + 1), false);
+            log!(info, format!("Class: {:?}", trooper.class), false);
+            log!(info, format!("Perk: {:?}", trooper.perk), false);
+            log!(info, format!("Trait: {:?}", trooper.r#trait), false);
+            log!(info, format!("Flaw: {:?}", trooper.flaw), false);
+            log!(info, format!("Stats: {:?}", trooper.stats), true);
         }
     }
 
-    fn print_trooper_gear(num: usize, trooper: Trooper) {
-        println!("//////// Trooper {} \\\\\\\\\\\\\\\\\\\\", num + 1);
-        println!();
-        println!("Trooper Class: {:?}", trooper.class);
-        println!();
-        Armory::print_loadout(trooper.loadout);
+    fn log_trooper_gear(num: usize, trooper: Trooper) {
+        log!(info, format!("//////// Trooper {} \\\\\\\\\\\\\\\\\\\\", num + 1), true);
+        log!(info, format!("Trooper Class: {:?}", trooper.class), true);
+        Armory::log_loadout(trooper.loadout);
     }
 
-    pub fn print_team_gear(team: Vec<Trooper>) {
-    for (i, trooper) in team.into_iter().enumerate() {
-        Self::print_trooper_gear(i, trooper);
-    }
+    pub fn log_team_gear(team: Vec<Trooper>) {
+        for (i, trooper) in team.into_iter().enumerate() {
+            Self::log_trooper_gear(i, trooper);
+        }
     }
 }
