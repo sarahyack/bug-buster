@@ -1,8 +1,4 @@
-//TODO: Create a tests/ folder and move all debug printing/info and whatnot there, after creating
-//the turn_handler and effect matchup. Cause then the output will be actually for debugging instead
-//of the only thing that outputs.
-//NOTE: Perhaps make a tests/ folder and a debug/ folder? That way there could actually be tests in
-//tests/ and all the debug output could be handled in the debug/ folder
+// TODO: Flesh out LoreMaster on the Lore branch
 
 mod utils;
 mod debug;
