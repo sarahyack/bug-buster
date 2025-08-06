@@ -3,19 +3,13 @@
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
+
 #[macro_export]
 macro_rules! log {
-    ($level:ident, $($arg:tt)*) => {
+    ($level:ident, $fmt:expr, $lb:expr) => {
         $crate::debug::LOG.lock().unwrap().add(
             $crate::debug::MessageType::from_str(stringify!($level)),
-            format!($($arg)*),
-            false
-        );
-    };
-    ($level:ident, $($arg:tt)*, line_break = $lb:expr) => {
-        $crate::debug::LOG.lock().unwrap().add(
-            $crate::debug::MessageType::from_str(stringify!($level)),
-            format!($($arg)*),
+            $fmt.to_string(),
             $lb
         );
     };
