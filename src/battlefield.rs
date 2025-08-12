@@ -11,8 +11,7 @@ use crate::utils::{RngHub, SafeSub};
 use crate::hive::Cartographer;
 use crate::bugs::{Broodmother, Bug, };
 use crate::troopers::{Commander, Trooper};
-use crate::armory::Armory;
-use crate::combat::{Joker, HitOutcome, HitInputs, DamageInputs, AttackContext, AttackResult};
+use crate::combat::{Joker, HitOutcome, HitInputs, DamageInputs, AttackContext};
 
 enum Combatant<'a> {
     Trooper(&'a Trooper),
@@ -49,7 +48,7 @@ impl<'a> Combatant<'a> {
 }
 
 #[derive(Default)]
-struct RollStats {
+pub struct RollStats {
     attempts: u32,
     miss: u32,
     graze: u32,
@@ -84,7 +83,7 @@ impl RollStats {
 }
 
 #[derive(Default)]
-struct PityStats {
+pub struct PityStats {
     total: u32,
     used: u32,            // streak > 0
     sum_lift: f32,        // Σ (p - base_p)
@@ -106,6 +105,7 @@ impl PityStats {
             }
         }
     }
+
     fn summary(&self, label: &str) -> String {
         let usedf = self.used as f32;
         let use_rate = if self.total == 0 { 0.0 } else { 100.0 * (self.used as f32) / (self.total as f32) };
@@ -116,6 +116,54 @@ impl PityStats {
             "{label}: used_on={} ({use_rate:.1}%) | avg_lift=+{avg_lift:.3} | avg_streak={avg_streak:.2} | max_streak={} | broke_streak={} ({broke_pct:.1}%)",
             self.used, self.max_streak, self.broke_streak
         )
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct SimOpts {
+    pub clamp: (f32, f32),
+    pub scale: f32,
+    pub round_cap: usize,
+    pub adv_trooper: i8,
+    pub adv_bug: i8,
+    pub rebalance_hp: f32,
+    pub rebalance_ap: f32,
+    pub rebalance_dmg: f32,
+}
+
+impl Default for SimOpts {
+    fn default() -> Self {
+        Self {
+            clamp: (0.05, 0.95),
+            scale: 0.60,
+            round_cap: 50,
+            adv_trooper: 0,
+            adv_bug: 0,
+            rebalance_hp: 1.55,
+            rebalance_ap: 1.55,
+            rebalance_dmg: 0.85,
+        }
+    }
+}
+
+pub struct WaveSummary {
+    pub rounds: usize,
+    pub trooper_alive: usize,
+    pub bug_alive: usize,
+    pub trooper_rolls: RollStats,
+    pub bug_rolls: RollStats,
+    pub trooper_pity: PityStats,
+    pub bug_pity: PityStats,
+}
+
+pub struct CampaignSummary {
+    pub waves_cleared: usize,
+    pub last_wave: WaveSummary,
+}
+
+impl CampaignSummary {
+    pub fn summary(&self) {
+        log!(info, format!("⚔️ Waves Cleared: {:?}", self.waves_cleared), true);
     }
 }
 
@@ -185,30 +233,34 @@ impl Overwatch {
     }
 
     pub fn start_game(&mut self) {
-        let wave = self.broodmother.spawn_test_wave(5);
-        self.broodmother.debug_wave(&wave);
         self.commander.spawn_troopers(&self.commander.team);
         self.commander.log_team_gear(&self.commander.team);
 
-        self.cartographer.spawn_chambers(15);
+        self.cartographer.spawn_chambers(5);
 
-        self.fight_sim(wave);
+        // let wave = self.broodmother.spawn_test_wave(5);
+        let count: usize = 5;
+        let waves: Vec<Vec<Bug>> = (0..count)
+            .map(|_| self.broodmother.spawn_test_wave(5))
+            .collect();
+
+        let campaign = self.run_waves(waves, SimOpts::default());
+        campaign.summary();
+        // self.fight_sim(wave);
 
         self.log_all();
     }
 
-    pub fn fight_sim(&mut self, mut wave: Vec<Bug>) {
-        let clamp = (0.05_f32, 0.95_f32);
-        let scale = 0.60_f32;
-
-        let mut round: usize = 1;
+    pub fn run_wave(&mut self, mut wave: Vec<Bug>, opts: SimOpts) -> WaveSummary {
+        let clamp = opts.clamp;
+        let scale = opts.scale;
 
         log!(debug, format!("❤️‍🔥 FIGHT START ❤️‍🔥"), true);
 
-        // self.commander.spawn_troopers(&self.commander.team);
-        self.rebalance(&mut wave, 1.55, 1.55, 0.85);
+        self.rebalance(&mut wave, opts.rebalance_hp, opts.rebalance_ap, opts.rebalance_dmg);
         self.broodmother.debug_wave(&wave);
 
+        let mut round: usize = 1;
         let mut trooper_stats = RollStats::default();
         let mut bug_stats = RollStats::default();
 
@@ -256,7 +308,7 @@ impl Overwatch {
                 ), false);
 
                 if !wave[bi].is_alive() {
-                    log!(info, format!("Bug#{bi} down!"), false);
+                    log!(info, format!("Bug#{} down!", bi + 1), false);
                 }
                 if !Self::any_bug_alive(&wave) { break; }
             }
@@ -297,7 +349,7 @@ impl Overwatch {
                 ), false);
 
                 if !self.commander.team[ti].is_alive() {
-                    log!(info, format!("Trooper#{ti} down!"), false);
+                    log!(info, format!("Trooper#{} down!", ti + 1), false);
                 }
                 if !self.any_trooper_alive() { break; }
             }
@@ -308,7 +360,7 @@ impl Overwatch {
                 break;
             }
         }
-
+        
         // Summary
         let alive_t = self.commander.team.iter().filter(|t| t.is_alive()).count();
         let alive_b = wave.iter().filter(|b| b.is_alive()).count();
@@ -318,6 +370,54 @@ impl Overwatch {
         log!(info, bug_stats.summary("Bug rolls"), true);
         log!(info, t_pity_stats.summary("Trooper pity"), false);
         log!(info, b_pity_stats.summary("Bug pity"), true);
+
+        WaveSummary {
+            rounds: round.saturating_sub(1),
+            trooper_alive: alive_t,
+            bug_alive: alive_b,
+            trooper_rolls: trooper_stats,
+            bug_rolls: bug_stats,
+            trooper_pity: t_pity_stats,
+            bug_pity: b_pity_stats,
+        }
+    }
+
+    pub fn between_waves(&mut self) {}
+
+    pub fn run_waves(&mut self, mut waves: Vec<Vec<Bug>>, mut opts: SimOpts) -> CampaignSummary {
+        let mut cleared: usize = 0;
+
+        for (wi, mut wave) in waves.drain(..).enumerate() {
+            log!(info, format!("🌊 Wave {} begin 🌊", wi + 1), true);
+
+            self.between_waves();
+
+            let enc = self.run_wave(std::mem::take(&mut wave), opts);
+
+            log!(info, format!("🌊 Wave {} end - Rounds: {}, Troopers Alive: {}, Bugs Alive: {}", wi + 1, enc.rounds, enc.trooper_alive, enc.bug_alive), true);
+
+            if enc.trooper_alive == 0 {
+                return CampaignSummary { waves_cleared: cleared, last_wave: enc };
+            }
+
+            cleared += 1;
+        }
+
+        let final_enc = WaveSummary {
+            rounds: 0,
+            trooper_alive: self.commander.team.iter().filter(|t| t.is_alive()).count(),
+            bug_alive: 0,
+            trooper_rolls: RollStats::default(),
+            bug_rolls: RollStats::default(),
+            trooper_pity: PityStats::default(),
+            bug_pity: PityStats::default(),
+        };
+
+        CampaignSummary { waves_cleared: 0, last_wave: final_enc }
+    }
+
+    pub fn fight_sim(&mut self, mut wave: Vec<Bug>) {
+        let _enc = self.run_wave(wave, SimOpts::default());
     }
 
     pub fn log_all(&self) {
