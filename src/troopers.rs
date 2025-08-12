@@ -1,5 +1,7 @@
 #![allow(dead_code)]
+// TODO: Create Loadout handling for trooper, possibly being able to pass in Commander?
 // TODO: Add way to apply effects to a Trooper's stats'
+// TODO: Create way to take damage and way to attack
 
 // ============ Imports =================
 
@@ -7,8 +9,9 @@ use rand::prelude::IndexedRandom;
 use std::default::Default;
 
 use crate::{boost, log};
-use crate::utils::RandBools as Bools;
+use crate::utils::{SafeSub,RandBools as Bools};
 use crate::armory::{Armory, Loadout};
+use crate::bugs::{Broodmother, Bug};
 
 // ============ Classes =================
 
@@ -68,6 +71,7 @@ impl TrooperStats {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Trooper {
     pub class: TrooperClass,
     loadout: Loadout,
@@ -164,13 +168,13 @@ impl Trooper {
     fn get_base_stats(class: TrooperClass) -> TrooperStats {
         use TrooperClass::*;
         let (hp, ap, dmg_mod, accuracy, agility) = match class {
-            Heavy => (130, 30, 1.2, 0.85, 0.2),
-            Scout => (70, 10, 0.95, 1.15, 0.65),
-            Engineer => (100, 20, 1.0, 1.05, 0.35),
-            Medic => (90, 15, 0.85, 1.05, 0.35),
-            ExoTech => (115, 20, 1.3, 0.9, 0.25),
-            Handler => (80, 14, 0.9, 1.0, 0.4),
-            Decoy => (110, 16, 1.0, 0.8, 0.5),
+            Heavy => (130, 30, 2.0, 0.85, 0.2),
+            Scout => (70, 10, 1.25, 1.15, 0.65),
+            Engineer => (100, 20, 1.7, 1.05, 0.35),
+            Medic => (90, 15, 1.15, 1.05, 0.35),
+            ExoTech => (115, 20, 1.9, 0.9, 0.25),
+            Handler => (80, 14, 1.3, 1.0, 0.4),
+            Decoy => (110, 16, 1.1, 0.8, 0.5),
         };
 
         TrooperStats::new(hp, ap, dmg_mod, accuracy, agility)
@@ -199,11 +203,66 @@ impl Trooper {
 
         Self::apply_modifiers(&mut base, traits, flaws)
     }
+
+    fn damage_mod(&self, base_dmg: u32)  -> u32 {
+        let dmg_mod = self.stats.dmg_mod;
+
+        let mod_dmg = (base_dmg as f32 * dmg_mod) as u32;
+
+        mod_dmg
+    }
+
+    pub fn hp(&self) -> u32 { self.stats.hp }
+
+    pub fn ap(&self) -> u32 { self.stats.ap }
+
+    pub fn damage(&self) -> (u32, u32, u32) {
+        let weapon = self.loadout.equipped_weapon();
+        let (dmg, hp_dmg, ap_dmg) = weapon.damage();
+        let mod_dmg = self.damage_mod(dmg);
+        (
+            mod_dmg,
+            hp_dmg,
+            ap_dmg,
+        )
+    }
+
+    pub fn accuracy(&self) -> f32 {
+        let acc = self.stats.accuracy;
+        let equipped_weapon = self.loadout.equipped_weapon();
+        let weapon_acc_del = equipped_weapon.accuracy();
+        let mult = (1.0 + weapon_acc_del).max(0.5);
+        acc * mult
+    }
+
+    pub fn agility(&self) -> f32 { self.stats.agility }
+
+    pub fn is_alive(&self) -> bool { self.hp() > 0 }
+
+    pub fn attack(&self, target: &mut Bug) {
+        let (dmg, hp_dmg, ap_dmg) = self.damage();
+        target.take_damage(dmg, hp_dmg, ap_dmg);
+    }
+
+    pub fn take_damage(&mut self, _dmg: u32, hp_dmg: u32, ap_dmg: u32) {
+        let stats = &mut self.stats;
+        boost!(stats, stats.ap != 0, ap -= ap_dmg);
+        boost!(stats, stats.ap == 0, hp -= hp_dmg);
+        // boost!(stats, true, hp -= dmg);
+        // boost!(stats, true, ap -= dmg);
+    }
 }
 
-pub struct Commander;
+pub struct Commander {
+    pub team: Vec<Trooper>,
+}
 
 impl Commander {
+    pub fn new(count: usize) -> Self {
+        let team = Self::test_trooper_creation(count);
+        Commander { team }
+    }
+
     pub fn test_trooper_creation(count: usize) -> Vec<Trooper> {
         use TrooperClass::*;
         let class_pool = vec![Heavy, Scout, Engineer, Medic, ExoTech, Handler, Decoy];
@@ -216,7 +275,8 @@ impl Commander {
             })
             .collect()
     }
-    pub fn spawn_troopers(team: &[Trooper]) {
+
+    pub fn spawn_troopers(&self, team: &[Trooper]) {
         for (i, trooper) in team.into_iter().enumerate() {
             log!(info, format!(" ======= Trooper {} ======== ", i + 1), false);
             log!(info, format!("Class: {:?}", trooper.class), false);
@@ -227,15 +287,35 @@ impl Commander {
         }
     }
 
-    fn log_trooper_gear(num: usize, trooper: Trooper) {
+    fn log_trooper_gear(num: usize, trooper: &Trooper) {
         log!(info, format!("//////// Trooper {} \\\\\\\\\\\\\\\\\\\\", num + 1), true);
         log!(info, format!("Trooper Class: {:?}", trooper.class), true);
-        Armory::log_loadout(trooper.loadout);
+        Armory::log_loadout(&trooper.loadout);
     }
 
-    pub fn log_team_gear(team: Vec<Trooper>) {
+    pub fn log_team_gear(&self, team: &Vec<Trooper>) {
         for (i, trooper) in team.into_iter().enumerate() {
             Self::log_trooper_gear(i, trooper);
+        }
+    }
+
+    pub fn trooper_attack(&self, trooper: Trooper, target: &mut Bug) {
+        trooper.attack(target);
+    }
+
+    pub fn trooper_attacked(&self, trooper: &mut Trooper, dmg: u32, hp_dmg: u32, ap_dmg: u32) {
+        trooper.take_damage(dmg, hp_dmg, ap_dmg);
+    }
+
+    pub fn apply_damage_to_trooper(&mut self, idx: usize, dmg: u32, hp_dmg: u32, ap_dmg: u32) {
+        let target = &mut self.team[idx];
+        target.take_damage(dmg, hp_dmg, ap_dmg);
+    }
+
+    pub fn rebalance_team(&mut self, hp_factor: f32, ap_factor: f32) {
+        for t in &mut self.team {
+            t.stats.hp = ((t.stats.hp as f32) * hp_factor).round() as u32;
+            t.stats.ap = ((t.stats.ap as f32) * ap_factor).round() as u32;
         }
     }
 }

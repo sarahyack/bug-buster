@@ -578,7 +578,7 @@ static WEAPON_STATS: &[WeaponStats] = &[
         id:             WeaponID::VenomSpiker,
         range:          Distance::Normal,
         damage_type:    &[DamageType::Corrosive],
-        dmg:            7,
+        dmg:            10,
         hp_dmg:         20,
         ap_dmg:         28,
         rof:            3,
@@ -932,7 +932,7 @@ static WEAPON_STATS: &[WeaponStats] = &[
     },
 ];
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct Weapon {
     id: WeaponID,
     info: WeaponInfo,
@@ -953,6 +953,15 @@ impl Weapon {
             effect: None,
             flaw: None,
         }
+    }
+
+    pub fn damage(&self) -> (u32, u32, u32) {
+        let (dmg, hp_dmg, ap_dmg) = (self.stats.dmg, self.stats.hp_dmg, self.stats.ap_dmg);
+        (dmg, hp_dmg, ap_dmg)
+    }
+
+    pub fn accuracy(&self) -> f32 {
+        self.stats.accuracy_delta
     }
 }
 
@@ -1687,7 +1696,7 @@ static GEAR_STATS: &[GearStats] = &[
     },
 ];
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct Gear {
     id: GearID,
     info: GearInfo,
@@ -1775,22 +1784,21 @@ impl Armory {
         weapons
     }
 
-    pub fn print_class_weapons(class: TrooperClass) {
+    pub fn log_class_weapons(class: TrooperClass) {
         let weapons: Vec<Weapon> = Self::load_weapons(class);
         println!("");
-        println!("Trooper Class: {:?}", class);
+        log!(info, format!("Trooper Class: {:?}", class), false);
         println!("");
         for (_, weapon) in weapons.into_iter().enumerate() {
-            println!("<<<<<<<<< {:?} >>>>>>>>>", weapon.id);
-            println!("ID: {:?}", weapon.id);
-            println!("Name: {:?}", weapon.info.name);
-            println!("Type: {:?}", weapon.info.r#type);
-            println!("Description (Flavor): {:?} ({})", weapon.info.description, weapon.info.flavor);
-            println!("Info: {:?}", weapon.info);
-            println!("Stats: {:?}", weapon.stats);
-            println!("Effect: {:?}", weapon.effect);
-            println!("Flaw: {:?}", weapon.flaw);
-            println!();
+            log!(info, format!("<<<<<<<<< {:?} >>>>>>>>>", weapon.id), false);
+            log!(info, format!("ID: {:?}", weapon.id), false);
+            log!(info, format!("Name: {:?}", weapon.info.name), false);
+            log!(info, format!("Type: {:?}", weapon.info.r#type), false);
+            log!(info, format!("Description (Flavor): {:?} ({})", weapon.info.description, weapon.info.flavor), false);
+            log!(info, format!("Info: {:?}", weapon.info), false);
+            log!(info, format!("Stats: {:?}", weapon.stats), false);
+            log!(info, format!("Effect: {:?}", weapon.effect), false);
+            log!(info, format!("Flaw: {:?}", weapon.flaw), true);
         }
     }
 
@@ -1814,20 +1822,17 @@ impl Armory {
         gear
     }
 
-    pub fn print_class_gear(class: TrooperClass) {
+    pub fn log_class_gear(class: TrooperClass) {
         let gear: Vec<Gear> = Self::load_gear(class);
-        println!("");
-        println!("Trooper Class: {:?}", class);
-        println!("");
+        log!(info, format!("Trooper Class: {:?}", class), true);
         for (_, item) in gear.into_iter().enumerate() {
-            println!("+++++++++++ {:?} +++++++++++", item.id);
-            println!("Name: {:?}", item.info.name);
-            println!("Type: {:?}", item.info.r#type);
-            println!("Description (Flavor): {:?} ({})", item.info.description, item.info.flavor);
-            println!("Stats: {:?}", item.stats);
-            println!("Effect: {:?}", item.effect);
-            println!("Flaw: {:?}", item.flaw);
-            println!();
+            log!(info, format!("+++++++++++ {:?} +++++++++++", item.id), false);
+            log!(info, format!("Name: {:?}", item.info.name), false);
+            log!(info, format!("Type: {:?}", item.info.r#type), false);
+            log!(info, format!("Description (Flavor): {:?} ({})", item.info.description, item.info.flavor), false);
+            log!(info, format!("Stats: {:?}", item.stats), false);
+            log!(info, format!("Effect: {:?}", item.effect), false);
+            log!(info, format!("Flaw: {:?}", item.flaw), true);
         }
     }
 
@@ -1868,16 +1873,24 @@ impl Armory {
         }
     }
 
+    fn freeze_equipment(weapons: Vec<Weapon>, gear: Vec<Gear>) -> (Box<[Weapon]>, Box<[Gear]>) {
+        let weapon_box = weapons.into_boxed_slice();
+        let gear_box = gear.into_boxed_slice();
+
+        (weapon_box, gear_box)
+    }
+
     pub fn create_loadout(class: TrooperClass) -> Loadout {
         let (weapon_amount, gear_amount) = Self::get_loadout_size(class);
         let weapons = Self::create_weapons(weapon_amount, class);
         let gear = Self::create_gear(gear_amount, class);
+        let (weapon_box, gear_box) = Self::freeze_equipment(weapons, gear);
 
-        Loadout::new(weapons, gear)
+        Loadout::new(weapon_box, gear_box)
     }
 
-    pub fn log_loadout(loadout: Loadout) {
-        for (_, weapon) in loadout.weapons.into_iter().enumerate() {
+    pub fn log_loadout(loadout: &Loadout) {
+        for (_, weapon) in loadout.weapons.iter().enumerate() {
             log!(info, format!("<<<<<<<<< {:?} >>>>>>>>>", weapon.id), false);
             log!(info, format!("ID: {:?}", weapon.id), false);
             log!(info, format!("Name: {:?}", weapon.info.name), false);
@@ -1889,7 +1902,7 @@ impl Armory {
             log!(info, format!("Flaw: {:?}", weapon.flaw), true);
         }
 
-        for (_, item) in loadout.gear.into_iter().enumerate() {
+        for (_, item) in loadout.gear.iter().enumerate() {
             log!(info, format!("+++++++++++ {:?} +++++++++++", item.id), false);
             log!(info, format!("Name: {:?}", item.info.name), false);
             log!(info, format!("Type: {:?}", item.info.r#type), false);
@@ -1903,15 +1916,50 @@ impl Armory {
 
 #[derive(Debug, Clone)]
 pub struct Loadout {
-    weapons: Vec<Weapon>,
-    gear: Vec<Gear>,
+    weapons: Box<[ Weapon ]>,
+    eweapon_idx: usize,
+    gear: Box<[ Gear ]>,
+    egear_idx: usize,
 }
 
 impl Loadout {
-    pub fn new(weapons: Vec<Weapon>, gear: Vec<Gear>) -> Self {
+    pub fn new(weapons: Box<[ Weapon ]>, gear: Box<[ Gear ]>) -> Self {
+        let eweapon_idx = 0;
+        let egear_idx = 0;
+
         Loadout {
             weapons,
+            eweapon_idx,
             gear,
+            egear_idx,
         }
+    }
+
+    pub fn swap_weapon(&mut self, slot: usize) {
+        if slot < self.weapons.len() {
+            self.eweapon_idx = slot;
+        }
+    }
+
+    pub fn swap_gear(&mut self, slot: usize) {
+        if slot < self.gear.len() {
+            self.egear_idx = slot;
+        }
+    }
+
+    pub fn equipped_weapon(&self) -> &Weapon {
+        &self.weapons[self.eweapon_idx]
+    }
+
+    pub fn mut_equipped_weapon(&mut self) -> &mut Weapon {
+        &mut self.weapons[self.eweapon_idx]
+    }
+
+    pub fn equipped_gear(&self) -> &Gear {
+        &self.gear[self.egear_idx]
+    }
+
+    pub fn mut_equipped_gear(&mut self) -> &mut Gear {
+        &mut self.gear[self.egear_idx]
     }
 }

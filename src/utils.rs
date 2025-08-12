@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+
+use crate::log;
 use rand::{seq::SliceRandom, Rng};
 
 // Macros
@@ -57,6 +60,23 @@ impl RandBools {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct RngHub {
+    pub master_seed: u64,
+}
+
+impl RngHub {
+    /// Create with a specific seed (reproducible) or None to auto-seed.
+    pub fn new(master_seed: Option<u64>) -> Self {
+        let master = master_seed.unwrap_or_else(|| rand::random::<u64>());
+
+        Self { master_seed: master }
+    }
+
+    pub fn log_master_seed(&self) {
+        log!(debug, format!("MASTER SEED: {:?}", self.master_seed), true);
+    }
+}
 
 /// A subtraction that never goes below zero. Created for use subtracting for u32 as well as f32.
 pub trait SafeSub {

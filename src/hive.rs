@@ -131,6 +131,10 @@ pub struct Chamber {
 pub struct Cartographer;
 
 impl Cartographer {
+    pub fn new() -> Cartographer {
+        Cartographer
+    }
+
     fn restrict_chambers(pool: &mut Vec<ChamberWeight>, ctype: &ChamberType) {
         pool.retain(|cw| &cw.r#type != ctype);
     }
@@ -242,15 +246,15 @@ impl Cartographer {
         chambers
     }
 
-    pub fn print_chambers(chambers: Vec<Chamber>) {
+    pub fn log_chambers(chambers: Vec<Chamber>) {
         for chamber in chambers {
             log!(info, format!("Chamber {} ({:?}) connects to {:?}", chamber.id, chamber.r#type, chamber.neighbors), false);
         }
     }
 
-    pub fn spawn_chambers(count: usize) {
+    pub fn spawn_chambers(&self, count: usize) {
         let ctypes = Self::gen_ctype_list(count);
         let chambers = Self::build_chambers(ctypes);
-        Self::print_chambers(chambers);
+        Self::log_chambers(chambers);
     }
 }

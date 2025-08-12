@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 // TODO: Add way to apply effects to Bug's stats'
+// TODO: Create way to take damage and way to attack
 // Imports
 
 use rand::{prelude::IndexedRandom};
@@ -7,6 +8,7 @@ use std::default::Default;
 
 use crate::{boost, log};
 use crate::utils::{SafeSub, RandBools as Bools};
+use crate::troopers::Trooper;
 
 // Enums, Traits, & Constants
 
@@ -395,16 +397,51 @@ impl Bug {
         let mut base = Self::get_base_stats(species);
         Self::apply_modifiers(&mut base, traits, flaws)
     }
+
+    pub fn hp(&self) -> u32 { self.stats.hp }
+
+    pub fn ap(&self) -> u32 { self.stats.ap }
+
+    pub fn damage(&self) -> (u32, u32, u32) {
+        let dmg = self.stats.damage;
+        let hp_dmg = (dmg as f32 * 0.4) as u32;
+        let ap_dmg = (dmg as f32 * 0.2) as u32;
+
+        (dmg, hp_dmg, ap_dmg)
+    }
+
+    pub fn accuracy(&self) -> f32 { self.stats.accuracy }
+
+    pub fn agility(&self) -> f32 { self.stats.agility }
+
+    pub fn is_alive(&self) -> bool { self.hp() > 0 }
+
+    pub fn attack(&self, target: &mut Trooper) {
+        let (dmg, hp_dmg, ap_dmg) = self.damage();
+        target.take_damage(dmg, hp_dmg, ap_dmg);
+    }
+
+    pub fn take_damage(&mut self, dmg: u32, hp_dmg: u32, ap_dmg: u32) {
+        let stats = &mut self.stats;
+        boost!(stats, stats.ap != 0, ap -= ap_dmg);
+        boost!(stats, stats.ap == 0, hp -= hp_dmg);
+        boost!(stats, true, hp -= dmg);
+        boost!(stats, true, ap -= dmg);
+    }
 }
 
 pub struct Broodmother;
 
 impl Broodmother {
-    pub fn spawn_test_wave(count: usize) -> Vec<Bug> {
+    pub fn new() -> Self {
+        Broodmother
+    }
+
+    pub fn spawn_test_wave(&self, count: usize) -> Vec<Bug> {
         use BugSpecies::*;
         let species_pool = vec![
             Snapper, Maw, Noodle, Priest, Skitter, Leaper,
-            Sporebelly, Fleshcrawler, Blinker, Skulker, Tornaut, Queen,
+            Sporebelly, Fleshcrawler, Blinker, Skulker, Tornaut,
         ];
 
         let mut rng = rand::rng();
@@ -417,7 +454,7 @@ impl Broodmother {
             .collect()
     }
 
-    pub fn debug_wave(wave: &[Bug]) {
+    pub fn debug_wave(&self, wave: &[Bug]) {
         for (i, bug) in wave.iter().enumerate() {
             log!(info, format!("--- BUG {} ---", i + 1), false);
             log!(info, format!("Species: {:?} ({})", bug.species, bug.name), false);
@@ -427,6 +464,20 @@ impl Broodmother {
             log!(info, format!("Stats: {:?}", bug.stats), false);
             log!(info, format!("Traits: {:?}", bug.traits), false);
             log!(info, format!("Flaws: {:?}", bug.flaws), true);
+        }
+    }
+
+    pub fn bug_attack(&self, bug: Bug, target: &mut Trooper) {
+        bug.attack(target);
+    }
+
+    pub fn bug_attacked(&self, bug: &mut Bug, dmg: u32, hp_dmg: u32, ap_dmg: u32) {
+        bug.take_damage(dmg, hp_dmg, ap_dmg);
+    }
+
+    pub fn rebalance_wave(&mut self, wave: &mut [Bug], dmg_factor: f32) {
+        for b in wave {
+            b.stats.damage = ((b.stats.damage as f32) * dmg_factor).round() as u32;
         }
     }
 }

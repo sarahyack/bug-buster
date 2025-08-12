@@ -3,7 +3,6 @@
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
-
 #[macro_export]
 macro_rules! log {
     ($level:ident, $fmt:expr, $lb:expr) => {
@@ -16,15 +15,16 @@ macro_rules! log {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum MessageType { Info, Error, Warn, Note }
+pub enum MessageType { Info, Note, Debug, Warn, Error, }
 
 impl MessageType {
     pub fn from_str(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "info" => MessageType::Info,
-            "error" => MessageType::Error,
-            "warn" => MessageType::Warn,
             "note" => MessageType::Note,
+            "debug" => MessageType::Debug,
+            "warn" => MessageType::Warn,
+            "error" => MessageType::Error,
             _ => MessageType::Info,
         }
     }
